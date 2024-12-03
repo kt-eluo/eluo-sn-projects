@@ -15,7 +15,8 @@ import {
   orderBy, 
   onSnapshot,
   serverTimestamp,
-  deleteDoc
+  deleteDoc,
+  updateDoc
 } from 'firebase/firestore'
 
 // 댓글 컴포넌트
@@ -59,6 +60,10 @@ export default function DetailContent({ id }) {
   const [comments, setComments] = useState([])
   const [newComment, setNewComment] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
+  const [isEditing, setIsEditing] = useState(false);
+  const [editedProject, setEditedProject] = useState(null);
 
   useEffect(() => {
     const fetchProjectDetail = async () => {
@@ -163,6 +168,88 @@ export default function DetailContent({ id }) {
     }
   }
 
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const db = getFirestore();
+        const userDoc = await getDoc(doc(db, 'users', user.uid));
+        setIsAdmin(userDoc.exists() && userDoc.data().role === 'admin');
+      } catch (error) {
+        console.error('관리자 권한 확인 중 오류:', error);
+        setIsAdmin(false);
+      }
+    };
+
+    checkAdminStatus();
+  }, [user]);
+
+  const handleStatusChange = async (newStatus) => {
+    try {
+      const db = getFirestore();
+      const projectRef = doc(db, 'projects', user.uid, 'userProjects', id);
+      await updateDoc(projectRef, {
+        status: newStatus,
+        updateAt: serverTimestamp()
+      });
+      
+      setProject(prev => ({
+        ...prev,
+        status: newStatus
+      }));
+      setIsStatusModalOpen(false);
+    } catch (error) {
+      console.error('상태 업데이트 중 오류:', error);
+      alert('상태 변경 중 오류가 발생했습니다.');
+    }
+  };
+
+  // project state가 설정된 후 editedProject 초기화
+  useEffect(() => {
+    if (project) {
+      setEditedProject({ ...project });
+    }
+  }, [project]);
+
+  // 수정 저장 함수
+  const handleSave = async () => {
+    try {
+      const db = getFirestore();
+      const projectRef = doc(db, 'projects', user.uid, 'userProjects', id);
+      
+      // 변경된 필드만 업데이트하기 위해 project와 editedProject 비교
+      const updates = {};
+      if (project.title !== editedProject.title) updates.title = editedProject.title;
+      if (project.status !== editedProject.status) updates.status = editedProject.status;
+      if (project.availableHours !== editedProject.availableHours) 
+        updates.availableHours = Number(editedProject.availableHours);
+      if (project.description !== editedProject.description) 
+        updates.description = editedProject.description;
+      if (project.team.join(',') !== editedProject.team.join(',')) 
+        updates.team = editedProject.team;
+      
+      // 날짜 처리
+      if (editedProject.startDate !== project.startDate) {
+        updates.startDate = new Date(editedProject.startDate);
+      }
+      if (editedProject.endDate !== project.endDate) {
+        updates.endDate = new Date(editedProject.endDate);
+      }
+
+      if (Object.keys(updates).length > 0) {
+        updates.updateAt = serverTimestamp();
+        await updateDoc(projectRef, updates);
+        setProject({ ...editedProject });
+      }
+      
+      setIsEditing(false);
+    } catch (error) {
+      console.error('프로젝트 업데이트 중 오류:', error);
+      alert('프로젝트 수정 중 오류가 발생했습니다.');
+    }
+  };
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -193,74 +280,242 @@ export default function DetailContent({ id }) {
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8 mb-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white">
-                {project.title}
-              </h1>
-              <div className={`px-4 py-2 rounded-full text-sm font-semibold
-                ${project.status === '진행' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' :
-                  project.status === '대기' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' :
-                  'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'}`}
-              >
-                {project.status}
+            {/* 타이틀과 상태 영역 */}
+            <div className="flex justify-between items-center mb-8 w-full gap-6">
+              <div className="flex-1 min-w-0 max-w-4xl">
+                {isEditing ? (
+                  <input
+                    type="text"
+                    value={editedProject.title}
+                    onChange={(e) => setEditedProject({...editedProject, title: e.target.value})}
+                    className="text-2xl sm:text-3xl font-bold w-full
+                      bg-gray-50 dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 
+                      rounded-lg px-4 py-2.5
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                      transition-colors duration-200"
+                    placeholder="프로젝트 제목을 입력하세요"
+                  />
+                ) : (
+                  <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white truncate">
+                    {project.title}
+                  </h1>
+                )}
+              </div>
+              
+              {/* 진행 상태 */}
+              <div className="flex-shrink-0">
+                {isEditing ? (
+                  <select
+                    value={editedProject.status}
+                    onChange={(e) => setEditedProject({...editedProject, status: e.target.value})}
+                    className="px-4 py-2.5 rounded-lg 
+                      bg-gray-50 dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600
+                      text-sm font-medium
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                      transition-colors duration-200
+                      min-w-[100px]"
+                  >
+                    <option value="대기">대기</option>
+                    <option value="진행">진행</option>
+                    <option value="종료">종료</option>
+                  </select>
+                ) : (
+                  <div className={`inline-block px-4 py-2 rounded-full text-sm font-semibold
+                    ${project.status === '진행' 
+                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' 
+                      : project.status === '대기' 
+                        ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' 
+                        : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'
+                    }`}
+                  >
+                    {project.status}
+                  </div>
+                )}
               </div>
             </div>
 
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                <span className="text-gray-600 dark:text-gray-300">가용 시간</span>
-                <span className="text-xl font-bold text-gray-900 dark:text-white">
-                  {project.availableHours}h
-                </span>
+            {/* 나머지 섹션들 */}
+            <div className="space-y-8">
+              {/* 가용 시간 */}
+              <div className="p-5 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <span className="text-gray-600 dark:text-gray-300 font-medium">가용 시간</span>
+                {isEditing ? (
+                  <input
+                    type="number"
+                    value={editedProject.availableHours}
+                    onChange={(e) => setEditedProject({...editedProject, availableHours: e.target.value})}
+                    className="ml-4 px-3 py-1.5 w-24 
+                      bg-white dark:bg-gray-600 
+                      border border-gray-300 dark:border-gray-500 
+                      rounded-lg
+                      focus:ring-2 focus:ring-blue-500 focus:border-transparent
+                      transition-colors duration-200"
+                  />
+                ) : (
+                  <span className="ml-4 text-xl font-bold text-gray-900 dark:text-white">
+                    {project.availableHours}h
+                  </span>
+                )}
               </div>
 
-              <div className="grid sm:grid-cols-2 gap-4">
+              {/* 날짜 */}
+              <div className="grid sm:grid-cols-2 gap-4 mb-6">
                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">시작일</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">{project.startDate}</p>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editedProject.startDate}
+                      onChange={(e) => setEditedProject({...editedProject, startDate: e.target.value})}
+                      className="w-full px-2 py-1 bg-white dark:bg-gray-600 
+                        border border-gray-300 dark:border-gray-500 rounded"
+                    />
+                  ) : (
+                    <p className="font-semibold text-gray-900 dark:text-white">{project.startDate}</p>
+                  )}
                 </div>
                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-1">종료일</p>
-                  <p className="font-semibold text-gray-900 dark:text-white">{project.endDate}</p>
+                  {isEditing ? (
+                    <input
+                      type="date"
+                      value={editedProject.endDate}
+                      onChange={(e) => setEditedProject({...editedProject, endDate: e.target.value})}
+                      className="w-full px-2 py-1 bg-white dark:bg-gray-600 
+                        border border-gray-300 dark:border-gray-500 rounded"
+                    />
+                  ) : (
+                    <p className="font-semibold text-gray-900 dark:text-white">{project.endDate}</p>
+                  )}
                 </div>
               </div>
 
-              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              {/* 팀 구성원 */}
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">팀 구성원</h3>
-                <div className="flex flex-wrap gap-2">
-                  {project.team.map((member, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300 
-                        rounded-full text-sm border border-gray-200 dark:border-gray-500"
+                {isEditing ? (
+                  <div className="flex flex-wrap gap-2">
+                    {editedProject.team.map((member, index) => (
+                      <div key={index} className="flex items-center gap-2">
+                        <input
+                          type="text"
+                          value={member}
+                          onChange={(e) => {
+                            const newTeam = [...editedProject.team];
+                            newTeam[index] = e.target.value;
+                            setEditedProject({...editedProject, team: newTeam});
+                          }}
+                          className="px-2 py-1 bg-white dark:bg-gray-600 
+                            border border-gray-300 dark:border-gray-500 rounded"
+                        />
+                        <button
+                          onClick={() => {
+                            const newTeam = editedProject.team.filter((_, i) => i !== index);
+                            setEditedProject({...editedProject, team: newTeam});
+                          }}
+                          className="text-red-500 hover:text-red-600"
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setEditedProject({
+                        ...editedProject, 
+                        team: [...editedProject.team, '']
+                      })}
+                      className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600"
                     >
-                      {member}
-                    </span>
-                  ))}
-                </div>
+                      + 멤버 추가
+                    </button>
+                  </div>
+                ) : (
+                  <div className="flex flex-wrap gap-2">
+                    {project.team.map((member, index) => (
+                      <span
+                        key={index}
+                        className="px-3 py-1.5 bg-white dark:bg-gray-600 text-gray-700 dark:text-gray-300 
+                          rounded-full text-sm border border-gray-200 dark:border-gray-500"
+                      >
+                        {member}
+                      </span>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+              {/* 프로젝트 설명 */}
+              <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">프로젝트 설명</h3>
-                <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
-                  {project.description}
-                </p>
+                {isEditing ? (
+                  <textarea
+                    value={editedProject.description}
+                    onChange={(e) => setEditedProject({...editedProject, description: e.target.value})}
+                    className="w-full px-3 py-2 bg-white dark:bg-gray-600 
+                      border border-gray-300 dark:border-gray-500 rounded"
+                    rows="4"
+                  />
+                ) : (
+                  <p className="text-gray-600 dark:text-gray-300 whitespace-pre-wrap">
+                    {project.description}
+                  </p>
+                )}
               </div>
 
               <div className="flex flex-col sm:flex-row justify-between text-sm text-gray-500 dark:text-gray-400 mt-8">
                 <p>생성일: {project.createAt}</p>
                 <p>최종 수정일: {project.updateAt}</p>
               </div>
-            </div>
 
-            <div className="mt-8 flex justify-end">
-              <button
-                onClick={() => router.push('/main')}
-                className="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
-                  transition-colors duration-200 text-sm sm:text-base font-medium"
-              >
-                목록으로 돌아가기
-              </button>
+              {/* 목록으로 돌아가기 버튼과 수정/저장/취소 버튼 */}
+              <div className="mt-8 flex justify-end gap-4">
+                {isAdmin && (
+                  <>
+                    {isEditing ? (
+                      <>
+                        <button
+                          onClick={handleSave}
+                          className="px-4 py-2 bg-green-500 text-white text-sm font-medium
+                            rounded-lg hover:bg-green-600
+                            transition-colors duration-200"
+                        >
+                          저장
+                        </button>
+                        <button
+                          onClick={() => {
+                            setIsEditing(false);
+                            setEditedProject({...project});
+                          }}
+                          className="px-4 py-2 bg-gray-500 text-white text-sm font-medium
+                            rounded-lg hover:bg-gray-600
+                            transition-colors duration-200"
+                        >
+                          취소
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setIsEditing(true)}
+                        className="px-4 py-2 bg-blue-500 text-white text-sm font-medium
+                          rounded-lg hover:bg-blue-600
+                          transition-colors duration-200
+                          flex items-center gap-1"
+                      >
+                        <span>수정</span>
+                      </button>
+                    )}
+                  </>
+                )}
+                <button
+                  onClick={() => router.push('/main')}
+                  className="px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 
+                    transition-colors duration-200 text-sm sm:text-base font-medium"
+                >
+                  목록으로 돌아가기
+                </button>
+              </div>
             </div>
           </div>
 
@@ -309,6 +564,38 @@ export default function DetailContent({ id }) {
           </div>
         </div>
       </div>
+
+      {/* 상태 변경 모달 */}
+      {isStatusModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              프로젝트 상태 변경
+            </h3>
+            <div className="space-y-2">
+              {['대기', '진행', '종료'].map((status) => (
+                <button
+                  key={status}
+                  onClick={() => handleStatusChange(status)}
+                  className={`w-full p-2 rounded-md text-sm font-medium transition-colors
+                    ${status === '진행' ? 'bg-green-100 text-green-800 hover:bg-green-200 dark:bg-green-900 dark:text-green-100' :
+                      status === '대기' ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200 dark:bg-yellow-900 dark:text-yellow-100' :
+                      'bg-red-100 text-red-800 hover:bg-red-200 dark:bg-red-900 dark:text-red-100'}`}
+                >
+                  {status}
+                </button>
+              ))}
+            </div>
+            <button
+              onClick={() => setIsStatusModalOpen(false)}
+              className="w-full mt-4 p-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200
+                dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
+            >
+              취소
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

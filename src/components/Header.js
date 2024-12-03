@@ -5,6 +5,8 @@ import { useFirebase } from '@/context/FirebaseContext'
 import { signOut } from 'firebase/auth'
 import { useTheme } from '@/context/ThemeContext'
 import { useAuth } from '@/app/hooks/useAuth'
+import { useState, useEffect } from 'react'
+import { getFirestore, doc, getDoc } from 'firebase/firestore'
 import Image from 'next/image'
 import LogoBlack from '@/app/images/logo_line_bk.png'
 import LogoWhite from '@/app/images/logo_line_wh.png'
@@ -14,14 +16,30 @@ export function Header() {
   const { auth } = useFirebase()
   const { darkMode, toggleTheme } = useTheme()
   const { user } = useAuth()
+  const [isAdmin, setIsAdmin] = useState(false)
 
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (!user) return
+      
+      try {
+        const db = getFirestore()
+        const userDoc = await getDoc(doc(db, 'users', user.uid))
+        setIsAdmin(userDoc.exists() && userDoc.data().role === 'admin') // 'isAdmin'이 아닌 'admin'으로 체크
+      } catch (error) {
+        console.error('Admin check error:', error)
+        setIsAdmin(false)
+      }
+    }
+
+    checkAdminStatus()
+  }, [user])
   const handleLogout = async () => {
     try {
       await signOut(auth)
       router.push('/')
-      console.log('로그아웃 성공')
     } catch (error) {
-      console.error('로그아웃 실패:', error)
+      console.error('Logout error:', error)
     }
   }
 
@@ -29,7 +47,6 @@ export function Header() {
     <header className="bg-white dark:bg-gray-800 shadow-md transition-colors duration-500">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          {/* 로고/홈 버튼 */}
           <h1>
             <button
               onClick={() => router.push('/')}
@@ -45,7 +62,6 @@ export function Header() {
               />
             </button>
           </h1>
-
           <div className="flex items-center space-x-4">
             {/* 다크모드 토글 버튼 */}
             <button
@@ -67,7 +83,7 @@ export function Header() {
                 </>
               ) : (
                 <>
-                  <span className="mr-2">🌙</span>
+                  <span className="mr-2">🌑</span>
                   <span className="hidden md:inline">다크 모드</span>
                 </>
               )}
@@ -77,13 +93,18 @@ export function Header() {
             {user ? (
                 <div className="flex items-center gap-2 sm:gap-4 flex-wrap sm:flex-nowrap">
                     <span className="text-gray-900 dark:text-white text-sm sm:text-base hidden sm:inline">
-                    {user.email}
+                      {user.email}
+                      {isAdmin && (
+                        <span className="ml-2 px-2 py-1 text-xs bg-gray-700 text-white rounded-full">
+                          관리자
+                        </span>
+                      )}
                     </span>
                     <button
                     onClick={handleLogout}
-                    className="px-2 sm:px-4 py-1 sm:py-2 rounded-lg 
+                    className="px-2 sm:px-3 py-1 rounded-lg 
                         bg-red-500 hover:bg-red-600 
-                        text-white text-sm sm:text-base
+                        text-white text-xs sm:text-sm
                         transition-all duration-200 ease-in-out
                         transform hover:scale-105
                         whitespace-nowrap"
