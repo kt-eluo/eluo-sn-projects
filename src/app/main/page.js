@@ -20,6 +20,8 @@ export default function MainPage() {
   const [periodFilter, setPeriodFilter] = useState('전체')
   const [customDateRange, setCustomDateRange] = useState([null, null]);
   const [startDate, endDate] = customDateRange;
+  const [currentPage, setCurrentPage] = useState(1);
+  const projectsPerPage = 12;
 
   const fetchUserProjects = async (userId) => {
     if (!userId) return;
@@ -27,7 +29,7 @@ export default function MainPage() {
     try {
       const db = getFirestore()
       const userProjectsRef = collection(db, 'projects', userId, 'userProjects')
-      const q = query(userProjectsRef, orderBy('createAt', 'desc'))
+      const q = query(userProjectsRef, orderBy('startDate', 'desc'))
       
       const querySnapshot = await getDocs(q)
       
@@ -66,7 +68,7 @@ export default function MainPage() {
     }
   }, [user, loading, router])
 
-  // 날짜 필터링 함수 수정
+  // 날짜 필터링 함수
   const getFilteredProjects = (projects) => {
     // 상태 필터 적용
     let filtered = projects.filter(project => 
@@ -75,7 +77,7 @@ export default function MainPage() {
 
     // 커스텀 날짜 범위가 있는 경우
     if (startDate && endDate) {
-      return filtered.filter(project => {
+      filtered = filtered.filter(project => {
         const projectStartDate = project.startDate?.toDate()
         if (!projectStartDate) return false
         return projectStartDate >= startDate && projectStartDate <= endDate
@@ -108,24 +110,46 @@ export default function MainPage() {
       })
     }
 
-    return filtered
+    // 시작일 기준 최신순 정렬
+    return filtered.sort((a, b) => {
+      const dateA = a.startDate?.toDate() || new Date(0)
+      const dateB = b.startDate?.toDate() || new Date(0)
+      return dateB - dateA
+    })
   }
 
   // 필터링된 프로젝트 계산
   const filteredProjects = getFilteredProjects(projects);
+  
+  // 페이지네이션 로직
+  const indexOfLastProject = currentPage * projectsPerPage;
+  const indexOfFirstProject = indexOfLastProject - projectsPerPage;
+  const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
+  const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
-  // 커스텀 날짜 범위 선택 시 기간 필터 초기화
+  // 통합된 핸들러 함수들
+  const handleStatusFilterChange = (status) => {
+    setStatusFilter(status);
+    setCurrentPage(1);
+  };
+
+  const handlePeriodFilterChange = (period) => {
+    setPeriodFilter(period);
+    setCustomDateRange([null, null]);
+    setCurrentPage(1);
+  };
+
   const handleDateRangeChange = (update) => {
     setCustomDateRange(update);
     if (update[0] && update[1]) {
       setPeriodFilter('전체');
+      setCurrentPage(1);
     }
   };
 
-  // 기간 필터 선택 시 커스텀 날짜 범위 초기화
-  const handlePeriodFilterChange = (period) => {
-    setPeriodFilter(period);
-    setCustomDateRange([null, null]);
+  const handlePageChange = (pageNumber) => {
+    setCurrentPage(pageNumber);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   if (loading || isLoading) {
@@ -141,29 +165,25 @@ export default function MainPage() {
       <Header />
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col gap-4 mb-6 sm:mb-8">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white">
-                내 프로젝트 목록 
-                <span className="ml-2 text-sm sm:text-base text-gray-500 dark:text-gray-400">
-                  (총 {filteredProjects.length}개)
-                </span>
-              </h1>
-            </div>
+          <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-6">
+            <h1 className="text-xl font-bold text-gray-900 dark:text-white whitespace-nowrap">
+              내 프로젝트 목록
+              <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                (총 {filteredProjects.length}개)
+              </span>
+            </h1>
 
-            {/* 필터 컨테이너를 오른쪽으로 정렬 */}
-            <div className="flex flex-col gap-2 sm:items-end">
-              {/* 상태 필터 */}
-              <div className="flex gap-2 w-full sm:w-[400px]">
+            <div className="flex flex-col gap-1.5 w-full sm:w-auto">
+              <div className="flex gap-1.5 w-full sm:w-[320px]">
                 {['전체', '진행', '대기', '종료'].map((status) => (
                   <button
                     key={status}
                     onClick={() => setStatusFilter(status)}
-                    className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg transition-all
-                      w-[calc(100%/4)] min-w-[80px]
+                    className={`px-2 py-1 text-xs rounded-md transition-all
+                      w-[calc(100%/4)]
                       ${statusFilter === status
-                        ? 'bg-blue-500 text-white shadow-lg'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        ? 'bg-blue-500 text-white shadow-sm'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }`}
                   >
                     {status}
@@ -171,18 +191,17 @@ export default function MainPage() {
                 ))}
               </div>
 
-              {/* 기간 필터 */}
-              <div className="flex gap-2 w-full sm:w-[400px]">
+              <div className="flex gap-1.5 w-full sm:w-[320px]">
                 {['전체', '1주일', '1개월', '3개월'].map((period) => (
                   <button
                     key={period}
                     onClick={() => handlePeriodFilterChange(period)}
                     disabled={startDate && endDate}
-                    className={`px-3 py-1.5 sm:px-4 sm:py-2 text-sm sm:text-base rounded-lg transition-all
-                      w-[calc(100%/4)] min-w-[80px]
+                    className={`px-2 py-1 text-xs rounded-md transition-all
+                      w-[calc(100%/4)]
                       ${periodFilter === period
-                        ? 'bg-green-500 text-white shadow-lg'
-                        : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'
+                        ? 'bg-green-500 text-white shadow-sm'
+                        : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }
                       ${startDate && endDate ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
@@ -191,8 +210,7 @@ export default function MainPage() {
                 ))}
               </div>
 
-              {/* 달력 기간 선택 */}
-              <div className="w-full sm:w-[400px] flex items-center gap-2 bg-gray-100 dark:bg-gray-800 p-2 rounded-lg">
+              <div className="w-full sm:w-[320px] flex items-center gap-1.5 bg-gray-50 dark:bg-gray-800 p-1.5 rounded-md">
                 <DatePicker
                   selected={startDate}
                   onChange={(date) => handleDateRangeChange([date, endDate])}
@@ -201,14 +219,14 @@ export default function MainPage() {
                   endDate={endDate}
                   dateFormat="yyyy-MM-dd"
                   placeholderText="연도-월-일"
-                  className="w-[calc(50%-1rem)] px-3 py-2 text-sm rounded-lg
+                  className="w-[calc(50%-0.75rem)] px-2 py-1 text-xs rounded-md
                     bg-white dark:bg-gray-700 
                     text-gray-900 dark:text-white
-                    border border-gray-300 dark:border-gray-600
-                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    border border-gray-200 dark:border-gray-600
+                    focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
                 
-                <span className="text-gray-500 dark:text-gray-400">~</span>
+                <span className="text-gray-500 dark:text-gray-400 text-xs">~</span>
                 
                 <DatePicker
                   selected={endDate}
@@ -219,11 +237,11 @@ export default function MainPage() {
                   minDate={startDate}
                   dateFormat="yyyy-MM-dd"
                   placeholderText="연도-월-일"
-                  className="w-[calc(50%-1rem)] px-3 py-2 text-sm rounded-lg
+                  className="w-[calc(50%-0.75rem)] px-2 py-1 text-xs rounded-md
                     bg-white dark:bg-gray-700 
                     text-gray-900 dark:text-white
-                    border border-gray-300 dark:border-gray-600
-                    focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    border border-gray-200 dark:border-gray-600
+                    focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -231,7 +249,7 @@ export default function MainPage() {
 
           {/* 프로젝트 카드 그리드 */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
-            {filteredProjects.map((project) => (
+            {currentProjects.map((project) => (
               <div
                 key={project.id}
                 onClick={() => router.push(`/detail/${project.id}`)}
@@ -338,6 +356,48 @@ export default function MainPage() {
               </div>
             ))}
           </div>
+
+          {filteredProjects.length > 0 && (
+            <div className="mt-8 flex justify-center items-center gap-2">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                className={`px-3 py-1 rounded-md text-sm
+                  ${currentPage === 1
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                  }`}
+              >
+                이전
+              </button>
+              
+              {[...Array(totalPages)].map((_, index) => (
+                <button
+                  key={index + 1}
+                  onClick={() => handlePageChange(index + 1)}
+                  className={`px-3 py-1 rounded-md text-sm
+                    ${currentPage === index + 1
+                      ? 'bg-blue-500 text-white'
+                      : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                    }`}
+                >
+                  {index + 1}
+                </button>
+              ))}
+              
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                className={`px-3 py-1 rounded-md text-sm
+                  ${currentPage === totalPages
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed dark:bg-gray-800 dark:text-gray-600'
+                    : 'bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600'
+                  }`}
+              >
+                다음
+              </button>
+            </div>
+          )}
 
           {filteredProjects.length === 0 && (
             <div className="text-center py-12">

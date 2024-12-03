@@ -171,13 +171,13 @@ export function Auth() {
           />
         </div>
         <div className="p-8">
-          <h2 className="text-2xl font-bold mb-8 text-center text-gray-900 dark:text-white transition-colors duration-500">
+          <h2 className="text-2xl font-bold mb-8 text-center text-gray-400 dark:text-white transition-colors duration-500">
             {isSignUp ? '회원가입' : '로그인'}
           </h2>
 
           <button
             onClick={handleGoogleLogin}
-            className="w-full bg-white dark:bg-gray-700 text-gray-900 dark:text-white 
+            className="w-full bg-white dark:bg-gray-700 text-gray-400 dark:text-white 
               border border-gray-300 dark:border-gray-600
               p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-600
               flex items-center justify-center gap-3 mb-6
@@ -207,22 +207,22 @@ export function Auth() {
           
           <form onSubmit={handleAuth} className="space-y-6">
             <div className="mb-4">
-              <label className="block mb-2 text-gray-900 dark:text-white transition-colors duration-500">이메일</label>
+              <label className="block mb-2 text-gray-400 dark:text-white transition-colors duration-500">이메일</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full p-2 border rounded dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-500"
+                className="w-full p-2 border rounded dark:bg-gray-700 text-gray-400 dark:text-white transition-colors duration-500"
                 required
               />
             </div>
             <div className="mb-4">
-              <label className="block mb-2 text-gray-900 dark:text-white transition-colors duration-500">비밀번호</label>
+              <label className="block mb-2 text-gray-400 dark:text-white transition-colors duration-500">비밀번호</label>
               <input
                 type="password"
                 value={password}
                 onChange={handlePasswordChange}
-                className="w-full p-2 border rounded dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-500"
+                className="w-full p-2 border rounded dark:bg-gray-700 text-gray-400 dark:text-white transition-colors duration-500"
                 placeholder="6자 이상, 문자와 숫자 포함"
                 required
                 minLength={6}
@@ -230,12 +230,12 @@ export function Auth() {
             </div>
             {isSignUp && (
               <div className="mb-6">
-                <label className="block mb-2 text-gray-900 dark:text-white transition-colors duration-500">비밀번호 확인</label>
+                <label className="block mb-2 text-gray-400 dark:text-white transition-colors duration-500">비밀번호 확인</label>
                 <input
                   type="password"
                   value={passwordConfirm}
                   onChange={handlePasswordConfirmChange}
-                  className={`w-full p-2 border rounded dark:bg-gray-700 text-gray-900 dark:text-white transition-colors duration-500 ${
+                  className={`w-full p-2 border rounded dark:bg-gray-700 text-gray-400 dark:text-white transition-colors duration-500 ${
                     passwordConfirm && !passwordMatch ? 'border-red-500' : ''
                   }`}
                   placeholder="비밀번호를 한번 더 입력해주세요"
@@ -243,12 +243,12 @@ export function Auth() {
                   minLength={6}
                 />
                 {passwordConfirm && !passwordMatch && (
-                  <p className="text-red-500 text-sm mt-1 text-gray-900 dark:text-white transition-colors duration-500">
+                  <p className="text-red-500 text-sm mt-1 text-gray-400 dark:text-white transition-colors duration-500">
                     비밀번호가 일치하지 않습니다
                   </p>
                 )}
                 {passwordConfirm && passwordMatch && (
-                  <p className="text-green-500 text-sm mt-1 text-gray-900 dark:text-white transition-colors duration-500">
+                  <p className="text-green-500 text-sm mt-1 text-gray-400 dark:text-white transition-colors duration-500">
                     비밀번호가 일치합니다
                   </p>
                 )}
