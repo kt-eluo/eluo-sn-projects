@@ -35,15 +35,25 @@ export default function MainPage() {
       
       const projectsList = querySnapshot.docs.map(doc => {
         const data = doc.data()
+        const totalEffort = 
+          Number(data.planning?.effort || 0) +
+          Number(data.design?.effort || 0) +
+          Number(data.publishing?.effort || 0) +
+          Number(data.development?.effort || 0);
+
         return {
           id: doc.id,
           title: data.title || '제목 없음',
-          description: data.description || '',
+          totalEffort: totalEffort,
           status: data.status || '대기',
-          availableHours: data.availableHours || 0,
-          team: data.team || [],
+          requestDate: data.requestDate,
           startDate: data.startDate,
           endDate: data.endDate,
+          planning: data.planning || { name: '', effort: 0 },
+          design: data.design || { name: '', effort: 0 },
+          publishing: data.publishing || { name: '', effort: 0 },
+          development: data.development || { name: '', effort: 0 },
+          description: data.description || '',
           createAt: data.createAt,
           updateAt: data.updateAt
         }
@@ -256,7 +266,7 @@ export default function MainPage() {
                 className={`rounded-xl shadow-md hover:shadow-xl 
                   transition-all duration-300 ease-in-out transform hover:-translate-y-1
                   p-4 sm:p-6 cursor-pointer
-                  ${project.status === '종료' 
+                  ${project.status === '료' 
                     ? 'bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 opacity-60 dark:opacity-40 hover:opacity-90 dark:hover:opacity-70' 
                     : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 opacity-100'
                   }
@@ -294,62 +304,55 @@ export default function MainPage() {
                   <div className="mt-auto">
                     <div className="mb-4 space-y-2">
                       <div className="text-sm flex items-center justify-between">
-                        <span className={`text-gray-500 dark:text-gray-400 
-                          ${project.status === '종료' ? 'text-gray-400 dark:text-gray-500' : ''}`}
-                        >
-                          시작일:
+                        <span className="text-gray-500 dark:text-gray-400">현업요청일:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {project.requestDate?.toDate().toLocaleDateString()}
                         </span>
-                        <span className={`font-medium
-                          ${project.status === '종료' 
-                            ? 'text-gray-500 dark:text-gray-500' 
-                            : 'text-gray-900 dark:text-white'}`}
-                        >
+                      </div>
+                      <div className="text-sm flex items-center justify-between">
+                        <span className="text-gray-500 dark:text-gray-400">시작일:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
                           {project.startDate?.toDate().toLocaleDateString()}
                         </span>
                       </div>
                       <div className="text-sm flex items-center justify-between">
-                        <span className={`text-gray-500 dark:text-gray-400
-                          ${project.status === '종료' ? 'text-gray-400 dark:text-gray-500' : ''}`}
-                        >
-                          종료일:
-                        </span>
-                        <span className={`font-medium
-                          ${project.status === '종료' 
-                            ? 'text-gray-500 dark:text-gray-500' 
-                            : 'text-gray-900 dark:text-white'}`}
-                        >
+                        <span className="text-gray-500 dark:text-gray-400">종료일:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
                           {project.endDate?.toDate().toLocaleDateString()}
                         </span>
                       </div>
                     </div>
 
-                    <div className="mb-3 text-sm">
-                      <span className={`text-gray-500 dark:text-gray-400
-                        ${project.status === '종료' ? 'text-gray-400 dark:text-gray-500' : ''}`}
-                      >
-                        가용 시간:
-                      </span>
-                      <span className={`ml-2 font-semibold
-                        ${project.status === '종료' 
-                          ? 'text-gray-500 dark:text-gray-500' 
-                          : 'text-gray-900 dark:text-white'}`}
-                      >
-                        {project.availableHours}h
-                      </span>
+                    <div className="mb-3">
+                      <div className="text-sm flex items-center justify-between">
+                        <span className="text-gray-500 dark:text-gray-400">전체 공수:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {project.totalEffort}h
+                        </span>
+                      </div>
                     </div>
 
                     <div className="flex flex-wrap gap-1.5">
-                      {project.team.map((member, index) => (
-                        <span
-                          key={index}
-                          className={`px-2 py-1 text-xs sm:text-sm rounded-full
-                            ${project.status === '종료'
-                              ? 'bg-gray-100 text-gray-500 dark:bg-gray-800 dark:text-gray-500'
-                              : 'bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300'}`}
-                        >
-                          {member}
+                      {project.planning.name && (
+                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+                          기획: {project.planning.name} ({project.planning.effort}h)
                         </span>
-                      ))}
+                      )}
+                      {project.design.name && (
+                        <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+                          디자인: {project.design.name} ({project.design.effort}h)
+                        </span>
+                      )}
+                      {project.publishing.name && (
+                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
+                          퍼블: {project.publishing.name} ({project.publishing.effort}h)
+                        </span>
+                      )}
+                      {project.development.name && (
+                        <span className="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+                          개발: {project.development.name} ({project.development.effort}h)
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
