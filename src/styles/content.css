@@ -1,0 +1,79 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Layout */
+  .layout-container {
+    @apply min-h-screen bg-white dark:bg-gray-900 relative;
+  }
+
+  .content-container {
+    @apply p-8 transition-colors duration-500;
+  }
+
+  .content-wrapper {
+    @apply max-w-4xl mx-auto;
+  }
+
+  /* Card */
+  .detail-card {
+    @apply bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6;
+  }
+
+  /* Title */
+  .detail-title {
+    @apply text-2xl font-bold text-gray-900 dark:text-white;
+  }
+
+  /* Status Badge */
+  .status-badge {
+    @apply px-4 py-2 rounded-full text-sm font-medium;
+  }
+
+  .status-badge-progress {
+    @apply bg-green-100 text-green-800 dark:bg-green-800 dark:text-green-100;
+  }
+
+  .status-badge-waiting {
+    @apply bg-yellow-100 text-yellow-800 dark:bg-yellow-800 dark:text-yellow-100;
+  }
+
+  .status-badge-complete {
+    @apply bg-red-100 text-red-800 dark:bg-red-800 dark:text-red-100;
+  }
+
+  /* Content Section */
+  .detail-section {
+    @apply space-y-4;
+  }
+
+  .detail-label {
+    @apply text-gray-600 dark:text-gray-400;
+  }
+
+  .detail-value {
+    @apply font-bold text-lg;
+  }
+
+  /* Progress Bar */
+  .progress-bar {
+    @apply w-64 h-4 bg-gray-200 rounded-full overflow-hidden;
+  }
+
+  .progress-bar-fill {
+    @apply h-full bg-blue-500 transition-all duration-500;
+  }
+
+  /* Team Members */
+  .team-member {
+    @apply px-3 py-1 bg-gray-100 dark:bg-gray-700 rounded-full text-sm;
+  }
+
+  /* Back Button */
+  .back-button {
+    @apply px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-lg
+      hover:bg-gray-300 dark:hover:bg-gray-600
+      transition-colors duration-300;
+  }
+}
