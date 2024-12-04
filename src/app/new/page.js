@@ -181,6 +181,19 @@ export default function Page() {
                 </div>
               </div>
 
+              {/* 담당자 및 공수 입력 영역 위에 전체 공수 표시 */}
+              <div className="mb-8">
+                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-4">
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">전체 공수</h3>
+                    <span className="text-sm text-red-500">전체 공수는 자동으로 합산됩니다.</span>
+                  </div>
+                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {newProject.totalEffort}h
+                  </p>
+                </div>
+              </div>
+
               {/* 담당자 및 공수 입력 */}
               <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 기획 */}
