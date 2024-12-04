@@ -484,7 +484,7 @@ export default function MainPage() {
 
                     <div className="mb-3">
                       <div className="text-sm flex items-center justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">전체 공:</span>
+                        <span className="text-gray-500 dark:text-gray-400">전체 공수:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {project.totalEffort}h
                         </span>
