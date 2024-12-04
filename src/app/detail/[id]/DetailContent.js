@@ -304,6 +304,23 @@ export default function DetailContent({ id }) {
     }
   }
 
+  // 삭제 핸들러 추가
+  const handleDelete = async () => {
+    if (!window.confirm('정말로 이 프로젝트를 삭제하시겠습니까?')) {
+      return
+    }
+
+    try {
+      const projectRef = doc(getFirestore(), 'projects', user.uid, 'userProjects', id)
+      await deleteDoc(projectRef)
+      alert('프로젝트가 삭제되었습니다.')
+      router.push('/main')
+    } catch (error) {
+      console.error('프로젝트 삭제 중 오류:', error)
+      alert('프로젝트 삭제 중 오류가 발생했습니다.')
+    }
+  }
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -430,7 +447,12 @@ export default function DetailContent({ id }) {
             {/* 공수 정보 */}
             <div className="mb-8">
               <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-4">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">전체 공수</h3>
+                <div className="flex items-center gap-2">
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">전체 공수</h3>
+                  {isEditing && (
+                    <span className="text-sm text-red-500">전체 공수는 자동으로 합산됩니다.</span>
+                  )}
+                </div>
                 <p className="text-2xl font-bold text-gray-900 dark:text-white">
                   {project.totalEffort}h
                 </p>
@@ -667,44 +689,48 @@ export default function DetailContent({ id }) {
               </form>
             </div>
 
-            {/* 버튼 영역 */}
-            <div className="flex justify-end gap-4">
-              {isAdmin && (
+            {/* 수정/삭제/목록 버튼 영역 */}
+            <div className="flex justify-end gap-4 mt-8">
+              {isEditing ? (
                 <>
-                  {isEditing ? (
-                    <>
-                      <button
-                        onClick={handleSave}
-                        className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
-                      >
-                        저장
-                      </button>
-                      <button
-                        onClick={() => {
-                          setIsEditing(false);
-                          setEditedProject({...project});
-                        }}
-                        className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
-                      >
-                        취소
-                      </button>
-                    </>
-                  ) : (
-                    <button
-                      onClick={() => setIsEditing(true)}
-                      className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
-                    >
-                      수정
-                    </button>
-                  )}
+                  <button
+                    onClick={handleSave}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    저장
+                  </button>
+                  <button
+                    onClick={() => {
+                      setIsEditing(false)
+                      setEditedProject(project)
+                    }}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    취소
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    onClick={() => setIsEditing(true)}
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                  >
+                    수정
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                  >
+                    삭제
+                  </button>
+                  <button
+                    onClick={() => router.push('/main')}
+                    className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  >
+                    목록으로
+                  </button>
                 </>
               )}
-              <button
-                onClick={() => router.push('/main')}
-                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-300 dark:hover:bg-gray-600"
-              >
-                목록으로 돌아가기
-              </button>
             </div>
           </div>
         </div>
