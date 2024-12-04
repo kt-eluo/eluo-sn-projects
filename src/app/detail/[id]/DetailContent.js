@@ -286,7 +286,6 @@ export default function DetailContent({ id }) {
         updateAt: serverTimestamp()
       }
 
-      // 날짜 필드가 변경된 경우에만 업데이트
       if (editedProject.startDate !== project.startDate) {
         updates.startDate = new Date(editedProject.startDate)
       }
@@ -301,7 +300,6 @@ export default function DetailContent({ id }) {
       setProject(editedProject)
       setIsEditing(false)
     } catch (error) {
-      console.error('프로젝트 업데이트 중 오류:', error)
       alert('프로젝트 수정 중 오류가 발생했습니다.')
     }
   }

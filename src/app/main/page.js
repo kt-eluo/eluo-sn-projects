@@ -5,7 +5,7 @@ import { useAuth } from '@/app/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/context/ThemeContext'
 import { Header } from '@/components/Header'
-import { getFirestore, collection, getDocs, query, orderBy } from 'firebase/firestore'
+import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc } from 'firebase/firestore'
 import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css"
 import '@/styles/main.css'
@@ -24,59 +24,73 @@ export default function MainPage() {
   const projectsPerPage = 12;
 
   const fetchUserProjects = async (userId) => {
-    if (!userId) return;
+    if (!userId) {
+      setProjects([]);
+      setIsLoading(false);
+      return;
+    }
+    
+    setIsLoading(true);
 
     try {
-      const db = getFirestore()
-      const userProjectsRef = collection(db, 'projects', userId, 'userProjects')
-      const q = query(userProjectsRef, orderBy('startDate', 'desc'))
+      const db = getFirestore();
       
-      const querySnapshot = await getDocs(q)
-      
-      const projectsList = querySnapshot.docs.map(doc => {
-        const data = doc.data()
-        const totalEffort = 
-          Number(data.planning?.effort || 0) +
-          Number(data.design?.effort || 0) +
-          Number(data.publishing?.effort || 0) +
-          Number(data.development?.effort || 0);
+      const userRef = doc(db, 'users', userId);
+      const userSnap = await getDoc(userRef);
 
-        return {
+      const projectsRef = collection(db, 'projects', userId, 'userProjects');
+      const querySnapshot = await getDocs(projectsRef);
+
+      if (querySnapshot.empty) {
+        setProjects([]);
+        return;
+      }
+
+      const projectsList = [];
+
+      querySnapshot.forEach((doc) => {
+        const data = doc.data();
+        const projectData = {
           id: doc.id,
           title: data.title || '제목 없음',
-          totalEffort: totalEffort,
           status: data.status || '대기',
+          description: data.description || '',
           requestDate: data.requestDate,
           startDate: data.startDate,
           endDate: data.endDate,
           planning: data.planning || { name: '', effort: 0 },
           design: data.design || { name: '', effort: 0 },
           publishing: data.publishing || { name: '', effort: 0 },
-          development: data.development || { name: '', effort: 0 },
-          description: data.description || '',
-          createAt: data.createAt,
-          updateAt: data.updateAt
-        }
-      })
+          development: data.development || { name: '', effort: 0 }
+        };
 
-      setProjects(projectsList)
+        projectData.totalEffort = 
+          Number(projectData.planning.effort || 0) +
+          Number(projectData.design.effort || 0) +
+          Number(projectData.publishing.effort || 0) +
+          Number(projectData.development.effort || 0);
+
+        projectsList.push(projectData);
+      });
+
+      setProjects(projectsList);
+
     } catch (error) {
-      console.error('프로젝트 데이터 가져오기 오류:', error)
-      setProjects([])
+      setProjects([]);
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   useEffect(() => {
     if (!loading) {
       if (!user) {
-        router.push('/')
+        router.push('/');
       } else {
-        fetchUserProjects(user.uid)
+        fetchUserProjects(user.uid);
       }
     }
-  }, [user, loading, router])
+  }, [user, loading, router]);
 
   // 날짜 필터링 함수
   const getFilteredProjects = (projects) => {
