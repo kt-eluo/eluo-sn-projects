@@ -16,16 +16,16 @@ export default function Page() {
   
   const [newProject, setNewProject] = useState({
     title: '',
+    status: '대기',
     description: '',
-    status: '진행',
     requestDate: new Date(),
     startDate: new Date(),
     endDate: new Date(),
-    planning: { name: '', effort: 0 },
-    design: { name: '', effort: 0 },
-    publishing: { name: '', effort: 0 },
-    development: { name: '', effort: 0 },
-    totalEffort: 0
+    planning: { name: '', effort: '' },
+    design: { name: '', effort: '' },
+    publishing: { name: '', effort: '' },
+    development: { name: '', effort: '' },
+    totalEffort: null
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -52,25 +52,44 @@ export default function Page() {
     checkAdminStatus()
   }, [user, router])
 
-  const calculateTotalEffort = () => {
-    return Number(newProject.planning.effort) +
-           Number(newProject.design.effort) +
-           Number(newProject.publishing.effort) +
-           Number(newProject.development.effort)
+  const calculateTotalEffort = (updatedProject) => {
+    const efforts = [
+      updatedProject.planning.effort,
+      updatedProject.design.effort,
+      updatedProject.publishing.effort
+    ]
+    
+    // 모든 effort 값이 빈 문자열인지 확인
+    const allEmpty = efforts.every(effort => effort === '')
+    if (allEmpty) return null
+
+    // 입력된 공수값들을 직접 합산
+    const total = efforts.reduce((sum, effort) => {
+      if (effort === '') return sum
+      return sum + Number(effort)
+    }, 0)
+    
+    return total > 0 ? Number(total.toFixed(2)) : null
   }
 
   const handleEffortChange = (field, value) => {
     setNewProject(prev => {
       const updated = {
         ...prev,
-        [field]: { ...prev[field], effort: Number(value) }
+        [field]: { ...prev[field], effort: value }
       }
+
+      // 개발을 제외한 나머지 필드들만 체크
+      const allEmpty = ['planning', 'design', 'publishing'].every(
+        type => updated[type].effort === ''
+      )
+
+      // 즉시 새로운 전체 공수 계산
+      const newTotalEffort = calculateTotalEffort(updated)
+
       return {
         ...updated,
-        totalEffort: Number(updated.planning.effort) +
-                    Number(updated.design.effort) +
-                    Number(updated.publishing.effort) +
-                    Number(updated.development.effort)
+        totalEffort: newTotalEffort
       }
     })
   }
@@ -79,7 +98,7 @@ export default function Page() {
     return null
   }
 
-  const handleSave = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault()
     if (!user) return
 
@@ -88,11 +107,35 @@ export default function Page() {
       const db = getFirestore()
       const newProjectRef = doc(collection(db, 'projects', user.uid, 'userProjects'))
       
-      await setDoc(newProjectRef, {
-        ...newProject,
+      const projectData = {
+        title: newProject.title,
+        status: newProject.status,
+        description: newProject.description,
+        requestDate: newProject.requestDate,
+        startDate: newProject.startDate,
+        endDate: newProject.endDate,
+        planning: {
+          name: newProject.planning.name,
+          effort: newProject.planning.effort === '' ? null : Number(newProject.planning.effort)
+        },
+        design: {
+          name: newProject.design.name,
+          effort: newProject.design.effort === '' ? null : Number(newProject.design.effort)
+        },
+        publishing: {
+          name: newProject.publishing.name,
+          effort: newProject.publishing.effort === '' ? null : Number(newProject.publishing.effort)
+        },
+        development: {
+          name: newProject.development.name,
+          effort: newProject.development.effort === '' ? null : Number(newProject.development.effort)
+        },
+        totalEffort: calculateTotalEffort(newProject),
         createAt: serverTimestamp(),
         updateAt: serverTimestamp()
-      })
+      }
+      
+      await setDoc(newProjectRef, projectData)
 
       alert('프로젝트가 성공적으로 등록되었습니다.')
       router.push('/main')
@@ -110,7 +153,7 @@ export default function Page() {
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <div className="max-w-4xl mx-auto">
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg p-6 sm:p-8">
-            <form onSubmit={handleSave}>
+            <form onSubmit={handleSubmit}>
               {/* 제목 및 상태 */}
               <div className="mb-8">
                 <div className="flex flex-col sm:flex-row justify-between gap-4 mb-4">
@@ -186,10 +229,10 @@ export default function Page() {
                 <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-4">
                   <div className="flex items-center gap-2">
                     <h3 className="text-lg font-semibold text-gray-900 dark:text-white">전체 공수</h3>
-                    <span className="text-sm text-red-500">전체 공수는 자동으로 합산됩니다.</span>
+                    <span className="text-sm text-red-500">전체 공수는 자동으로 합산됩니다. (* 개발 공수 제외)</span>
                   </div>
                   <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {newProject.totalEffort}h
+                    {newProject.totalEffort === null ? '-' : `${newProject.totalEffort}m`}
                   </p>
                 </div>
               </div>
@@ -307,6 +350,7 @@ export default function Page() {
                     />
                   </div>
                 </div>
+
               </div>
 
               {/* 프로젝트 설명 */}
@@ -334,7 +378,7 @@ export default function Page() {
                       : 'bg-blue-500 hover:bg-blue-600 transition-colors'
                     }`}
                 >
-                  {isLoading ? '저장 중...' : '저장'}
+                  {isLoading ? '장 중...' : '저장'}
                 </button>
                 <button
                   type="button"

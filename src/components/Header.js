@@ -17,8 +17,6 @@ export function Header() {
   const { darkMode, toggleTheme } = useTheme()
   const { user } = useAuth()
   const [isAdmin, setIsAdmin] = useState(false)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [isSearchVisible, setIsSearchVisible] = useState(false)
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -46,48 +44,24 @@ export function Header() {
     }
   }
 
-  const handleSearch = (e) => {
-    e.preventDefault()
-    // 검색 로직 구현 예정
-    console.log('Search term:', searchTerm)
-  }
-
   return (
-    <header className="bg-white dark:bg-gray-800 shadow-md transition-colors duration-500">
-      <div className="max-w-7xl mx-auto flex flex-col">
-        {/* 기존 헤더 영역 */}
+    <header className="bg-white dark:bg-gray-800 shadow-sm">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between items-center h-16">
-          <h1>
-            <button
-              onClick={() => router.push('/')}
-              className="flex items-center hover:opacity-80 transition-opacity"
-            >
-              <Image
-                src={darkMode ? LogoWhite : LogoBlack}
-                alt="Company Logo"
-                width={100}
-                height={40}
-                priority
-                className="transition-opacity duration-500"
-              />
-            </button>
-          </h1>
+          {/* 로고 */}
+          <div className="flex-shrink-0 cursor-pointer" onClick={() => router.push('/main')}>
+            <Image
+              src={darkMode ? LogoWhite : LogoBlack}
+              alt="Company Logo"
+              width={120}
+              height={40}
+              priority
+              className="transition-opacity duration-500"
+            />
+          </div>
 
-          <div className="flex items-center space-x-4">
-            {/* 검색 토글 버튼 */}
-            {user && (
-              <button
-                onClick={() => setIsSearchVisible(!isSearchVisible)}
-                className="w-8 h-8 flex items-center justify-center rounded-full
-                  bg-gray-100 dark:bg-gray-700
-                  text-gray-600 dark:text-gray-300
-                  hover:bg-gray-200 dark:hover:bg-gray-600
-                  transition-all duration-200"
-              >
-                🔍
-              </button>
-            )}
-
+          {/* 우측 버튼 영역 */}
+          <div className="flex items-center gap-4">
             {/* 다크모드 토글 버튼 */}
             <button
               onClick={toggleTheme}
@@ -150,39 +124,6 @@ export function Header() {
                 로그인
               </button>
             )}
-          </div>
-        </div>
-
-        {/* 검색바 영역 */}
-        <div 
-          className={`overflow-hidden transition-all duration-300 ease-in-out
-            ${isSearchVisible ? 'max-h-20 opacity-100' : 'max-h-0 opacity-0'}`}
-        >
-          <div className="pb-4">
-            <form onSubmit={handleSearch} className="flex items-center justify-center">
-              <div className="relative w-full max-w-2xl">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="프로젝트 검색..."
-                  className="w-full px-4 py-2 pr-10 
-                    bg-gray-100 dark:bg-gray-700 
-                    border border-gray-300 dark:border-gray-600 
-                    rounded-lg
-                    text-gray-900 dark:text-white
-                    focus:outline-none focus:ring-0
-                    transition-colors duration-200"
-                />
-                <button
-                  type="submit"
-                  className="absolute right-3 top-1/2 transform -translate-y-1/2
-                    text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
-                >
-                  🔍
-                </button>
-              </div>
-            </form>
           </div>
         </div>
       </div>
