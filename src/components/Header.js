@@ -46,10 +46,10 @@ export function Header() {
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm">
-      <div className="max-w-7xl mx-auto px-2 sm:px-4 md:px-0">
-        <div className="flex justify-between items-center h-16">
+      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+        <div className="flex justify-between items-center h-16 w-full">
           {/* 로고 영역 */}
-          <div className="flex-shrink-0 cursor-pointer pl-0 md:pl-0" onClick={() => router.push('/main')}>
+          <div className="flex-shrink-0 cursor-pointer">
             <Image
               src={darkMode ? LogoWhite : LogoBlack}
               alt="Company Logo"
@@ -61,7 +61,7 @@ export function Header() {
           </div>
 
           {/* 우측 버튼 영역 */}
-          <div className="flex items-center gap-2 sm:gap-4 pr-0 md:pr-0">
+          <div className="flex items-center justify-end space-x-4 flex-1">
             {/* 다크모드 토글 버튼 */}
             <button
               onClick={toggleTheme}
@@ -89,10 +89,10 @@ export function Header() {
               )}
             </button>
 
-            {/* 로그인/로그아웃 버튼 */}
+            {/* 로그인/로그아웃 영역 */}
             {user ? (
-              <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-wrap sm:flex-nowrap">
-                <span className="text-gray-900 dark:text-white text-xs sm:text-sm md:text-base hidden sm:inline">
+              <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
+                <span className="text-gray-900 dark:text-white text-xs sm:text-sm md:text-base">
                   {user.email}
                   {isAdmin && (
                     <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs bg-gray-700 text-white rounded-full">

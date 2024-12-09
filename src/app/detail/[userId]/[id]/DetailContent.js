@@ -91,6 +91,27 @@ const formatDate = (timestamp) => {
   return '';
 };
 
+// 상단에 calculateTotalEffort 함수 추가
+const calculateTotalEffort = (project) => {
+  const efforts = [
+    project.planning.effort,
+    project.design.effort,
+    project.publishing.effort
+  ]
+  
+  // 모든 effort 값이 빈 문자열인지 확인
+  const allEmpty = efforts.every(effort => effort === '')
+  if (allEmpty) return null
+
+  // 입력된 공수값들을 직접 합산
+  const total = efforts.reduce((sum, effort) => {
+    if (effort === '') return sum
+    return sum + Number(effort)
+  }, 0)
+  
+  return total > 0 ? `${Number(total.toFixed(2))}m` : null
+}
+
 export default function DetailContent({ userId, projectId }) {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -104,7 +125,14 @@ export default function DetailContent({ userId, projectId }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false)
   const [isEditing, setIsEditing] = useState(false)
-  const [editedProject, setEditedProject] = useState(null)
+  const [editedProject, setEditedProject] = useState({
+    ...project,
+    classification: project?.classification || null,
+    channel: project?.channel || null,
+    service: project?.service || null,
+    category: project?.category || null,
+    deploymentType: project?.deploymentType || null
+  })
 
   // Firestore 초기화
   const db = getFirestore();
@@ -156,6 +184,7 @@ export default function DetailContent({ userId, projectId }) {
             requestDate: data.requestDate || null,
             startDate: data.startDate || null,
             endDate: data.endDate || null,
+            completionDate: data.completionDate || null,
             description: data.description || '',
             planning: {
               name: data.planning?.name || '',
@@ -174,7 +203,12 @@ export default function DetailContent({ userId, projectId }) {
               effort: data.development?.effort || null
             },
             createAt: data.createAt || null,
-            updateAt: data.updateAt || null
+            updateAt: data.updateAt || null,
+            classification: data.classification || null,
+            channel: data.channel || null,
+            service: data.service || null,
+            category: data.category || null,
+            deploymentType: data.deploymentType || null
           };
 
           setProject(projectData);
@@ -256,27 +290,28 @@ export default function DetailContent({ userId, projectId }) {
   const handleDeleteComment = async (commentId) => {
     if (!user) return;
 
+    // 삭제 확인 다이얼로그
     const confirmDelete = window.confirm('댓글을 삭제하시겠습니까?');
     if (!confirmDelete) return;
 
     try {
-      const commentRef = doc(db, 'projects', userId, 'userProjects', projectId, 'comments', commentId);
+      const commentRef = doc(db, 'projects', id, 'comments', commentId);
       const commentDoc = await getDoc(commentRef);
       
       if (!commentDoc.exists()) {
-        alert('댓글을 찾을 수 없습니다.');
+        console.error('댓글을 찾을 수 없습니다.');
         return;
       }
 
+      // 본인 댓글이거나 관리자인 경우에만 삭제 가능
       if (commentDoc.data().userEmail === user.email || isAdmin) {
         await deleteDoc(commentRef);
         setComments(prev => prev.filter(comment => comment.id !== commentId));
       } else {
-        alert('삭제 권한이 없습니다.');
+        console.error('삭제 권한이 없습니다.');
       }
     } catch (error) {
       console.error('댓글 삭제 중 오류 발생:', error);
-      alert('댓글 삭제 중 오류가 발생했습니다.');
     }
   };
 
@@ -304,6 +339,12 @@ export default function DetailContent({ userId, projectId }) {
       
       await updateDoc(projectRef, {
         ...editedProject,
+        completionDate: editedProject.completionDate || null,
+        classification: editedProject.classification || null,
+        channel: editedProject.channel || null,
+        service: editedProject.service || null,
+        category: editedProject.category || null,
+        deploymentType: editedProject.deploymentType || null,
         updateAt: serverTimestamp()
       });
 
@@ -329,8 +370,8 @@ export default function DetailContent({ userId, projectId }) {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 메인 컨텐츠 카드 */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* 메인 텐츠 카드 */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           {/* 프로젝트 헤더 */}
           <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800">
@@ -349,253 +390,367 @@ export default function DetailContent({ userId, projectId }) {
                   project.title
                 )}
               </h1>
-              <div className={`px-4 py-1.5 rounded-full text-sm font-medium
-                ${project.status === '진행' 
-                  ? 'bg-green-100 text-green-800' 
-                  : project.status === '대기' 
-                    ? 'bg-yellow-100 text-yellow-800'
-                    : 'bg-red-100 text-red-800'}`}
-              >
-                {project.status}
-              </div>
+              {isEditing ? (
+                <select
+                  value={editedProject.status}
+                  onChange={(e) => setEditedProject({...editedProject, status: e.target.value})}
+                  className="px-4 py-1.5 rounded-full text-sm font-medium bg-white 
+                    border border-white/20 text-gray-900 focus:ring-2 focus:ring-white/50"
+                >
+                  <option value="대기" className="text-gray-900">대기</option>
+                  <option value="진행" className="text-gray-900">진행</option>
+                  <option value="종료" className="text-gray-900">종료</option>
+                </select>
+              ) : (
+                <div className={`px-4 py-1.5 rounded-full text-sm font-medium
+                  ${project.status === '진행' 
+                    ? 'bg-green-100 text-green-800' 
+                    : project.status === '대기' 
+                      ? 'bg-yellow-100 text-yellow-800'
+                      : 'bg-red-100 text-red-800'}`}
+                >
+                  {project.status}
+                </div>
+              )}
             </div>
           </div>
 
           <div className="p-6 space-y-8">
-            {/* 날짜 및 공수 정보 */}
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+            {/* 날짜 및 수 정보 */}
+            <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">현업요청일</div>
-                {isEditing ? (
-                  <input
-                    type="date"
-                    value={formatDate(editedProject.requestDate)}
-                    onChange={(e) => setEditedProject({...editedProject, requestDate: e.target.value})}
-                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                  />
-                ) : (
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatDate(project.requestDate)}
-                  </div>
-                )}
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {formatDate(project.requestDate)}
+                </div>
               </div>
+              
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">시작일</div>
-                {isEditing ? (
-                  <input
-                    type="date"
-                    value={formatDate(editedProject.startDate)}
-                    onChange={(e) => setEditedProject({...editedProject, startDate: e.target.value})}
-                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                  />
-                ) : (
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatDate(project.startDate)}
-                  </div>
-                )}
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">TF요청일</div>
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {formatDate(project.startDate)}
+                </div>
               </div>
+              
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">종료일</div>
-                {isEditing ? (
-                  <input
-                    type="date"
-                    value={formatDate(editedProject.endDate)}
-                    onChange={(e) => setEditedProject({...editedProject, endDate: e.target.value})}
-                    className="w-full px-3 py-2 rounded-lg bg-white dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                  />
-                ) : (
-                  <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                    {formatDate(project.endDate)}
-                  </div>
-                )}
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">완료예정일</div>
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {formatDate(project.endDate)}
+                </div>
               </div>
+              
+              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">실 완료일</div>
+                <div className="text-lg font-semibold text-gray-900 dark:text-white">
+                  {formatDate(project.completionDate) || '-'}
+                </div>
+              </div>
+              
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">총 공수</div>
                 <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {project.totalEffort}m
+                  {calculateTotalEffort(project) || '0m'}
                 </div>
               </div>
             </div>
 
-            {/* 담당자 정보 - 전체 너비로 변경 */}
-            <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">담당자 정보</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* 기획 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                    기획
-                  </label>
+            {/* 작업구분 섹션 추가 */}
+            <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 mb-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">작업구분</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {/* 분류 */}
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">분류</span>
                   {isEditing ? (
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        value={editedProject.planning.name}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          planning: { ...editedProject.planning, name: e.target.value }
-                        })}
-                        className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="담당자 이름"
-                      />
-                      <input
-                        type="text"
-                        value={editedProject.planning.effort ?? ''}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          planning: { ...editedProject.planning, effort: e.target.value }
-                        })}
-                        className="w-28 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="공수(m)"
-                      />
-                    </div>
+                    <select
+                      value={editedProject.classification || ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        classification: e.target.value || null
+                      })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="">필드없음 (null 값)</option>
+                      <option value="WEB+MW">WEB+MW</option>
+                      <option value="">필드없음</option>
+                    </select>
                   ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-blue-600 dark:text-blue-400 font-medium">
-                        {project.planning.name}
-                      </span>
-                      {project.planning.effort !== null && (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          ({project.planning.effort}m)
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-base text-gray-900 dark:text-white">
+                      {project.classification || '필드없음'}
+                    </span>
                   )}
                 </div>
-                {/* 디자인 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                    디자인
-                  </label>
+
+                {/* 채널 */}
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">채널</span>
                   {isEditing ? (
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        value={editedProject.design.name}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          design: { ...editedProject.design, name: e.target.value }
-                        })}
-                        className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="담당자 이름"
-                      />
-                      <input
-                        type="text"
-                        value={editedProject.design.effort ?? ''}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          design: { ...editedProject.design, effort: e.target.value }
-                        })}
-                        className="w-28 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="공수(m)"
-                      />
-                    </div>
+                    <select
+                      value={editedProject.channel || ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        channel: e.target.value || null
+                      })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="TF팀">TF팀</option>
+                      <option value="TF팀 개발">TF팀 개발</option>
+                      <option value="">필드없음</option>
+                    </select>
                   ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-purple-600 dark:text-purple-400 font-medium">
-                        {project.design.name}
-                      </span>
-                      {project.design.effort !== null && (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          ({project.design.effort}m)
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-base text-gray-900 dark:text-white">
+                      {project.channel || '필드없음'}
+                    </span>
                   )}
                 </div>
-                {/* 퍼블리싱 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                    퍼블리싱
-                  </label>
+
+                {/* 서비스 */}
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">서비스</span>
                   {isEditing ? (
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        value={editedProject.publishing.name}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          publishing: { ...editedProject.publishing, name: e.target.value }
-                        })}
-                        className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="담당자 이름"
-                      />
-                      <input
-                        type="text"
-                        value={editedProject.publishing.effort ?? ''}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          publishing: { ...editedProject.publishing, effort: e.target.value }
-                        })}
-                        className="w-28 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="공수(m)"
-                      />
-                    </div>
+                    <select
+                      value={editedProject.service || ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        service: e.target.value || null
+                      })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="고객지원">고객지원</option>
+                      <option value="메인페이지">메인페이지</option>
+                      <option value="산업">산업</option>
+                      <option value="상품/서비스">상품/서비스</option>
+                      <option value="인사이트">인사이트</option>
+                      <option value="">필드없음</option>
+                    </select>
                   ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-green-600 dark:text-green-400 font-medium">
-                        {project.publishing.name}
-                      </span>
-                      {project.publishing.effort !== null && (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          ({project.publishing.effort}m)
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-base text-gray-900 dark:text-white">
+                      {project.service || '필드없음'}
+                    </span>
                   )}
                 </div>
-                {/* 개발 */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">
-                    개발
-                  </label>
+
+                {/* 카테고리 */}
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">카테고리</span>
                   {isEditing ? (
-                    <div className="flex gap-3">
-                      <input
-                        type="text"
-                        value={editedProject.development.name}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          development: { ...editedProject.development, name: e.target.value }
-                        })}
-                        className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="담당자 이름"
-                      />
-                      <input
-                        type="text"
-                        value={editedProject.development.effort ?? ''}
-                        onChange={(e) => setEditedProject({
-                          ...editedProject,
-                          development: { ...editedProject.development, effort: e.target.value }
-                        })}
-                        className="w-28 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                          border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                        placeholder="공수(m)"
-                      />
-                    </div>
+                    <select
+                      value={editedProject.category || ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        category: e.target.value || null
+                      })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="콘텐츠 등록">콘텐츠 등록</option>
+                      <option value="콘텐츠 수정">콘텐츠 수정</option>
+                      <option value="">필드없음</option>
+                    </select>
                   ) : (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-orange-600 dark:text-orange-400 font-medium">
-                        {project.development.name}
-                      </span>
-                      {project.development.effort !== null && (
-                        <span className="text-sm text-gray-500 dark:text-gray-400">
-                          ({project.development.effort}m)
-                        </span>
-                      )}
-                    </div>
+                    <span className="text-base text-gray-900 dark:text-white">
+                      {project.category || '필드없음'}
+                    </span>
                   )}
                 </div>
+
+                {/* 배포방식 */}
+                <div className="flex flex-col">
+                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">배포방식</span>
+                  {isEditing ? (
+                    <select
+                      value={editedProject.deploymentType || ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        deploymentType: e.target.value || null
+                      })}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="CMS 등록">CMS 등록</option>
+                      <option value="정기배포">정기배포</option>
+                      <option value="">필드없음</option>
+                    </select>
+                  ) : (
+                    <span className="text-base text-gray-900 dark:text-white">
+                      {project.deploymentType || '필드없음'}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* 담���자 정보 섹션 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              {/* 기획 */}
+              <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-2">기획</h4>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedProject.planning.name}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        planning: { ...editedProject.planning, name: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="담당자명"
+                    />
+                    <input
+                      type="text"
+                      value={editedProject.planning.effort ?? ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        planning: { ...editedProject.planning, effort: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="공수 (시간)"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-blue-600 dark:text-blue-400 font-medium">
+                      {project.planning.name || '미정'}
+                    </span>
+                    {project.planning.effort && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        공수: {project.planning.effort}m
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 디자인 */}
+              <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
+                <h4 className="font-medium text-purple-900 dark:text-purple-100 mb-2">디자인</h4>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedProject.design.name}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        design: { ...editedProject.design, name: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="담당자명"
+                    />
+                    <input
+                      type="text"
+                      value={editedProject.design.effort ?? ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        design: { ...editedProject.design, effort: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="공수 (시간)"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-purple-600 dark:text-purple-400 font-medium">
+                      {project.design.name || '미정'}
+                    </span>
+                    {project.design.effort && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        공수: {project.design.effort}m
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 퍼블리싱 */}
+              <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                <h4 className="font-medium text-green-900 dark:text-green-100 mb-2">퍼블리싱</h4>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedProject.publishing.name}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        publishing: { ...editedProject.publishing, name: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="담당자명"
+                    />
+                    <input
+                      type="text"
+                      value={editedProject.publishing.effort ?? ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        publishing: { ...editedProject.publishing, effort: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="공수 (시간)"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-green-600 dark:text-green-400 font-medium">
+                      {project.publishing.name || '미정'}
+                    </span>
+                    {project.publishing.effort && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        공수: {project.publishing.effort}m
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* 개발 */}
+              <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
+                <h4 className="font-medium text-orange-900 dark:text-orange-100 mb-2">개발</h4>
+                {isEditing ? (
+                  <div className="space-y-2">
+                    <input
+                      type="text"
+                      value={editedProject.development.name}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        development: { ...editedProject.development, name: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="담당자명"
+                    />
+                    <input
+                      type="text"
+                      value={editedProject.development.effort ?? ''}
+                      onChange={(e) => setEditedProject({
+                        ...editedProject,
+                        development: { ...editedProject.development, effort: e.target.value }
+                      })}
+                      className="w-full px-3 py-2 rounded bg-gray-50 dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      placeholder="공수 (시간)"
+                    />
+                  </div>
+                ) : (
+                  <div className="flex flex-col space-y-1">
+                    <span className="text-orange-600 dark:text-orange-400 font-medium">
+                      {project.development.name || '미정'}
+                    </span>
+                    {project.development.effort && (
+                      <span className="text-sm text-gray-500 dark:text-gray-400">
+                        공수: {project.development.effort}m
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
             </div>
 
@@ -609,7 +764,7 @@ export default function DetailContent({ userId, projectId }) {
                   className="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-700 
                     border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                   rows="8"
-                  placeholder="프로젝트 설명을 입력하세요"
+                  placeholder="프로젝트 설을 입력하세요"
                 />
               ) : (
                 <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">

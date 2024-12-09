@@ -9,6 +9,12 @@ import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css"
 import { useTheme } from '@/context/ThemeContext'
 
+const formatDate = (date) => {
+  if (!date) return '';
+  const d = new Date(date);
+  return d.toISOString().split('T')[0];
+};
+
 export default function Page() {
   const { user, loading } = useAuth()
   const router = useRouter()
@@ -17,10 +23,16 @@ export default function Page() {
   const [newProject, setNewProject] = useState({
     title: '',
     status: '대기',
+    classification: '',
+    channel: '',
+    service: '',
+    category: '',
+    deploymentType: '',
     description: '',
-    requestDate: new Date(),
-    startDate: new Date(),
-    endDate: new Date(),
+    requestDate: null,
+    startDate: null,
+    endDate: null,
+    completionDate: null,
     planning: { name: '', effort: '' },
     design: { name: '', effort: '' },
     publishing: { name: '', effort: '' },
@@ -110,10 +122,16 @@ export default function Page() {
       const projectData = {
         title: newProject.title,
         status: newProject.status,
+        classification: newProject.classification || null,
+        channel: newProject.channel || null,
+        service: newProject.service || null,
+        category: newProject.category || null,
+        deploymentType: newProject.deploymentType || null,
         description: newProject.description,
         requestDate: newProject.requestDate,
         startDate: newProject.startDate,
         endDate: newProject.endDate,
+        completionDate: newProject.completionDate || null,
         planning: {
           name: newProject.planning.name,
           effort: newProject.planning.effort === '' ? null : Number(newProject.planning.effort)
@@ -181,59 +199,140 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* 날짜 선택 */}
-              <div className="mb-8 grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    현업 요청일
-                  </label>
-                  <DatePicker
-                    selected={newProject.requestDate}
-                    onChange={(date) => setNewProject({...newProject, requestDate: date})}
-                    dateFormat="yyyy-MM-dd"
-                    className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 
-                      text-gray-900 dark:text-white"
+              {/* 날짜 및 공수 정보 */}
+              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">현업요청일</div>
+                  <input
+                    type="date"
+                    value={formatDate(newProject.requestDate)}
+                    onChange={(e) => setNewProject({...newProject, requestDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    시작일
-                  </label>
-                  <DatePicker
-                    selected={newProject.startDate}
-                    onChange={(date) => setNewProject({...newProject, startDate: date})}
-                    dateFormat="yyyy-MM-dd"
-                    className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 
-                      text-gray-900 dark:text-white"
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">TF요청일</div>
+                  <input
+                    type="date"
+                    value={formatDate(newProject.startDate)}
+                    onChange={(e) => setNewProject({...newProject, startDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                   />
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    종료일
-                  </label>
-                  <DatePicker
-                    selected={newProject.endDate}
-                    onChange={(date) => setNewProject({...newProject, endDate: date})}
-                    dateFormat="yyyy-MM-dd"
-                    className="w-full px-4 py-2 rounded-lg bg-gray-50 dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 
-                      text-gray-900 dark:text-white"
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">총료예정일</div>
+                  <input
+                    type="date"
+                    value={formatDate(newProject.endDate)}
+                    onChange={(e) => setNewProject({...newProject, endDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                   />
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">실 완료일</div>
+                  <input
+                    type="date"
+                    value={formatDate(newProject.completionDate)}
+                    onChange={(e) => setNewProject({...newProject, completionDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  />
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">총 공수</div>
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white h-[30px] flex items-center">
+                    {calculateTotalEffort(newProject) ? `${calculateTotalEffort(newProject)}m` : '-'}
+                  </div>
                 </div>
               </div>
 
-              {/* 담당자 및 공수 입력 영역 위에 전체 공수 표시 */}
-              <div className="mb-8">
-                <div className="p-4 bg-gray-50 dark:bg-gray-700 rounded-lg mb-4">
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">전체 공수</h3>
-                    <span className="text-sm text-red-500">전체 공수는 자동으로 합산됩니다. (* 개발 공수 제외)</span>
+              {/* 작업구분 섹션 */}
+              <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 mb-8">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">작업구분</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {/* 분류 */}
+                  <div className="p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
+                    <h4 className="font-medium text-cyan-900 dark:text-cyan-100 mb-2">분류</h4>
+                    <select
+                      value={newProject.classification}
+                      onChange={(e) => setNewProject({...newProject, classification: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="">필드없음</option>
+                      <option value="WEB+MW">WEB+MW</option>
+                    </select>
                   </div>
-                  <p className="text-2xl font-bold text-gray-900 dark:text-white">
-                    {newProject.totalEffort === null ? '-' : `${newProject.totalEffort}m`}
-                  </p>
+
+                  {/* 채널 */}
+                  <div className="p-4 bg-violet-50 dark:bg-violet-900/20 rounded-lg">
+                    <h4 className="font-medium text-violet-900 dark:text-violet-100 mb-2">채널</h4>
+                    <select
+                      value={newProject.channel}
+                      onChange={(e) => setNewProject({...newProject, channel: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="">필드없음</option>
+                      <option value="TF팀">TF팀</option>
+                      <option value="TF팀 개발">TF팀 개발</option>
+                    </select>
+                  </div>
+
+                  {/* 서비스 */}
+                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
+                    <h4 className="font-medium text-indigo-900 dark:text-indigo-100 mb-2">서비스</h4>
+                    <select
+                      value={newProject.service}
+                      onChange={(e) => setNewProject({...newProject, service: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="">필드없음</option>
+                      <option value="고객지원">고객지원</option>
+                      <option value="메인페이지">메인페이지</option>
+                      <option value="산업">산업</option>
+                      <option value="상품/서비스">상품/서비스</option>
+                      <option value="인사이트">인사이트</option>
+                    </select>
+                  </div>
+
+                  {/* 카테고리 */}
+                  <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
+                    <h4 className="font-medium text-rose-900 dark:text-rose-100 mb-2">카테고리</h4>
+                    <select
+                      value={newProject.category}
+                      onChange={(e) => setNewProject({...newProject, category: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="">필드없음</option>
+                      <option value="콘텐츠 등록">콘텐츠 등록</option>
+                      <option value="콘텐츠 수정">콘텐츠 수정</option>
+                    </select>
+                  </div>
+
+                  {/* 배포방식 */}
+                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                    <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">배포방식</h4>
+                    <select
+                      value={newProject.deploymentType}
+                      onChange={(e) => setNewProject({...newProject, deploymentType: e.target.value})}
+                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                    >
+                      <option value="">필드없음</option>
+                      <option value="CMS 등록">CMS 등록</option>
+                      <option value="정기배포">정기배포</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 

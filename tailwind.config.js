@@ -7,7 +7,12 @@ module.exports = {
   ],
   darkMode: 'class',
   theme: {
-    extend: {},
+    extend: {
+      maxWidth: {
+        '8xl': '85rem',
+      },
+      
+    },
   },
   plugins: [],
 };

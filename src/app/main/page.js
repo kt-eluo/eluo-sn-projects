@@ -5,7 +5,7 @@ import { useAuth } from '@/app/hooks/useAuth'
 import { useRouter } from 'next/navigation'
 import { useTheme } from '@/context/ThemeContext'
 import { Header } from '@/components/Header'
-import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, addDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, query, orderBy, doc, getDoc, addDoc, serverTimestamp } from 'firebase/firestore';
 import DatePicker from 'react-datepicker'
 import "react-datepicker/dist/react-datepicker.css"
 import '@/styles/main.css'
@@ -23,17 +23,20 @@ export default function MainPage() {
   const [startDate, endDate] = customDateRange;
   const [currentPage, setCurrentPage] = useState(1);
   const projectsPerPage = 12;
-  const [monthFilter, setMonthFilter] = useState(new Date().getMonth() + 1);
-  const [displayMonth, setDisplayMonth] = useState(new Date().getMonth() + 1);
-  const [displayYear, setDisplayYear] = useState(new Date().getFullYear());
-  const [isCopyMode, setIsCopyMode] = useState(false);
-  const [yearFilter, setYearFilter] = useState('2024');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedMonths, setSelectedMonths] = useState([]);
-  const [isAllMonthsSelected, setIsAllMonthsSelected] = useState(false);
-  const currentMonth = new Date().getMonth() + 1;
-  const currentDate = new Date();
-  const currentYear = currentDate.getFullYear().toString();
+  const [isCopyMode, setIsCopyMode] = useState(false);
+
+  // 현재 날짜 관련 변수들
+  const today = new Date()
+  const currentYear = today.getFullYear().toString()
+  const currentMonth = today.getMonth() + 1
+
+  // 상태 관리
+  const [yearFilter, setYearFilter] = useState(currentYear)
+  const [selectedMonths, setSelectedMonths] = useState([])
+  const [isAllMonthsSelected, setIsAllMonthsSelected] = useState(false)
+  const [displayYear, setDisplayYear] = useState(Number(currentYear))
+  const [displayMonth, setDisplayMonth] = useState(currentMonth)
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -67,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 ��용자의 프로젝트를 가져오기 위해 users 컬렉션을 먼저 조회
+      // 모든 용자의 프로젝트를 가져오기  users 컬렉션을 먼저 조회
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -111,36 +114,32 @@ export default function MainPage() {
     }
   }, [user, loading, router]);
 
-  // 날짜 필터링 함수 수정
+  // 짜 필터링 함수 수정
   const getFilteredProjects = (projects) => {
     let filtered = projects;
 
-    // 검색어 필터링 추가
+    // 검색어 필터링
     if (searchTerm.trim()) {
       filtered = filtered.filter(project => 
         project.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
-    // 커스텀 날짜 범위가 있는 경우 (최우선 적용)
+    // 커스텀 날짜 범위 필터링
     if (startDate && endDate) {
       filtered = filtered.filter(project => {
         const projectStartDate = project.startDate?.toDate();
         if (!projectStartDate) return false;
         
-        // 시작일의 00:00:00으로 설정
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
         
-        // 종료일의 23:59:59로 설정
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
         
         return projectStartDate >= start && projectStartDate <= end;
       });
     } else {
-      // 커스텀 날짜 범위가 없을 경우에만 년도와 월 필터 적용
-      
       // 년도 필터 적용
       filtered = filtered.filter(project => {
         const startDate = project.startDate?.toDate();
@@ -150,7 +149,7 @@ export default function MainPage() {
         return yearFilter === projectYear;
       });
 
-      // 월별 필터 적용 수정
+      // 월별 필터 적용 - selectedMonths가 비어있으면 모든 월 표시
       if (selectedMonths.length > 0) {
         filtered = filtered.filter(project => {
           const startDate = project.startDate?.toDate();
@@ -162,12 +161,11 @@ export default function MainPage() {
       }
     }
 
-    // 상태 필터는 항상 적용
+    // 상태 필터 적용
     filtered = filtered.filter(project => 
       statusFilter === '전체' || project.status === statusFilter
     );
 
-    // 시작일 기준 최신순 정렬
     return filtered.sort((a, b) => {
       const dateA = a.startDate?.toDate() || new Date(0);
       const dateB = b.startDate?.toDate() || new Date(0);
@@ -211,61 +209,45 @@ export default function MainPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  // 전체 공수 계산 함수 수
-  const getCurrentMonthTotalEffort = (projects) => {
-    if (!projects || projects.length === 0) return '-'
-    
-    const total = projects.reduce((total, project) => {
-      if (!project.startDate) return total
+  // 전체 공수 계산 함수 수정
+  const calculateTotalEffort = (projects) => {
+    if (!Array.isArray(projects)) return 0
+
+    return projects.reduce((total, project) => {
+      const planningEffort = Number(project.planning?.effort || 0)
+      const designEffort = Number(project.design?.effort || 0)
+      const publishingEffort = Number(project.publishing?.effort || 0)
       
-      const startDate = project.startDate.toDate()
-      const projectMonth = startDate.getMonth() + 1
-      const projectYear = startDate.getFullYear()
-
-      if (projectYear === displayYear && projectMonth === displayMonth) {
-        const planningEffort = Number(project.planning?.effort || 0)
-        const designEffort = Number(project.design?.effort || 0)
-        const publishingEffort = Number(project.publishing?.effort || 0)
-        
-        const sum = planningEffort + designEffort + publishingEffort
-        return total + sum
-      }
-      return total
+      return total + planningEffort + designEffort + publishingEffort
     }, 0)
-
-    // total이 0이거나 NaN이면 '-' 반환
-    if (!total || isNaN(total)) return '-'
-    
-    // 소수이 없으면 정수로, 있으면 소수점 1자리까지 표시
-    return Number.isInteger(total) ? Math.floor(total) : Number(total.toFixed(1))
   }
 
   // 월 필터 핸들러 수정
   const handleMonthFilterChange = (month) => {
     if (month === '전체') {
-      // 전체 선택 태 토글
       if (isAllMonthsSelected) {
-        // 전체 선택 제시 현재 월만 선택
-        setSelectedMonths([currentMonth]);
+        // 전체가 선택된 상태서 클릭하면 모두 해제
+        setSelectedMonths([]);
         setIsAllMonthsSelected(false);
       } else {
+        // 전체가 선택되지 않은 상태에서 클릭하면 모두 선택
         setSelectedMonths([1,2,3,4,5,6,7,8,9,10,11,12]);
         setIsAllMonthsSelected(true);
       }
     } else {
-      // 개별 월 토
+      // 개별 월 선택 시 (현재 월 포함)
       setSelectedMonths(prev => {
-        const newSelection = prev.includes(month)
-          ? prev.filter(m => m !== month)
-          : [...prev, month].sort((a, b) => a - b);
-        
-        // 모든 월이 선택되었는지 확인
-        setIsAllMonthsSelected(newSelection.length === 12);
-        
-        // 선택된 월이 하나도 없으면 현재 월 선택
-        if (newSelection.length === 0) {
-          return [currentMonth];
+        let newSelection;
+        if (prev.includes(month)) {
+          // 이미 선택된 월 클릭 시 해제
+          newSelection = prev.filter(m => m !== month);
+        } else {
+          // 새로운 월 선택 시 추가
+          newSelection = [...prev, month].sort((a, b) => a - b);
         }
+        
+        // 전체 선택 상태 업데이트
+        setIsAllMonthsSelected(newSelection.length === 12);
         
         return newSelection;
       });
@@ -273,7 +255,7 @@ export default function MainPage() {
     setCurrentPage(1);
   };
 
-  // 공수를 일수로 환하는 함수 수정
+  // 수를 일수로 환하는 함수 수정
   const convertEffortToDay = (effort) => {
     if (effort === '-' || !effort) return '-'
     const days = effort / 0.5
@@ -281,60 +263,71 @@ export default function MainPage() {
     return days > 0 ? `${Number.isInteger(days) ? Math.floor(days) : days.toFixed(1)}일` : '-'
   }
 
-  const handleCopy = async (projectId) => {
-    try {
-      // 확인 알럿
-      const isConfirmed = window.confirm("해당 프로젝트를 복사하시겠습니까?");
-      
-      if (!isConfirmed) return;
+  // 복사 함수 수
+  const handleCopy = async (projectId, originalUserId) => {
+    console.log("복사 시작:", projectId, originalUserId, user.uid); // 디버깅용
 
+    if (!user?.uid) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    try {
       const db = getFirestore();
       
-      // 원본 프로젝트 데이터 가오기
-      const originalProjectRef = doc(db, 'projects', user.uid, 'userProjects', projectId);
+      // 1. 원본 프로젝트 데이터 가져오기 (원래 소유자의 경로에서)
+      const originalProjectRef = doc(db, 'projects', originalUserId, 'userProjects', projectId);
       const originalProjectSnap = await getDoc(originalProjectRef);
-      
+
+      console.log("프로젝트 스냅샷:", originalProjectSnap.exists(), originalProjectSnap.data()); // 디버깅용
+
       if (!originalProjectSnap.exists()) {
-        throw new Error('원본 프로젝트를 찾을 수 없습니다.');
+        console.error('프로젝트를 찾을 수 없음:', projectId);
+        alert('프로젝트를 찾을 수 없습니다.');
+        return;
       }
 
+      // 2. 새 프로젝트 데이터 준비
       const originalData = originalProjectSnap.data();
-      
-      // 새로운 프로젝트 데이터 준비
       const newProjectData = {
         ...originalData,
         title: `${originalData.title} (복사본)`,
-        status: '대기',
-        requestDate: originalData.requestDate,
-        startDate: originalData.startDate,
-        endDate: originalData.endDate,
-        createAt: new Date(), // 생성일만 현재 시간으로
-        updateAt: new Date(), // 수정일만 현재 시간으로
-        planning: originalData.planning || { name: '', effort: 0 },
-        design: originalData.design || { name: '', effort: 0 },
-        publishing: originalData.publishing || { name: '', effort: 0 },
-        development: originalData.development || { name: '', effort: 0 }
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+        userId: user.uid,  // 현재 사용자의 uid로 설정
       };
 
-      // 새 프로젝트 문서 생성
-      const newProjectRef = collection(db, 'projects', user.uid, 'userProjects');
-      await addDoc(newProjectRef, newProjectData);
+      delete newProjectData.id; // id 제거
 
-      // 성공 메시지
-      alert('프로젝트가 복사되었습니다.');
+      // 3. 새 프로젝트 추가 (현재 사용자의 로에)
+      const userProjectsRef = collection(db, 'projects', user.uid, 'userProjects');
+      const docRef = await addDoc(userProjectsRef, newProjectData);
+
+      console.log("프로젝트 복사 완료:", docRef.id); // 디버깅용
       
-      // 모든 프로젝트 다시 불러오기
-      if (user) {
-        await fetchUserProjects(user.uid);
-      }
-      
-      // 복사 모드 종료
+      // 4. 성공 메시지 표시 및 복사 모드 종료
+      alert('프로젝트가 성공적으로 복사되었습니다.');
       setIsCopyMode(false);
+      
+      // 5. 프로젝트 목록 새로고침
+      fetchUserProjects(user.uid);
 
     } catch (error) {
-      console.error('프로젝트 복사 중 오류:', error);
+      console.error('프로젝트 복사 중 오류 발생:', error);
       alert('프로젝트 복사 중 오류가 발생했습니다.');
     }
+  };
+
+  // 복사 버튼 클릭 핸들러 수정
+  const handleCopyClick = (e, projectId, userId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    console.log("복사 버튼 클릭:", projectId, userId); // 디버깅
+    if (!projectId) {
+      console.error('프로젝트 ID가 없습니다.');
+      return;
+    }
+    handleCopy(projectId, userId);
   };
 
   // DatePicker 상태가 설정었는지 확인하는 함
@@ -353,9 +346,15 @@ export default function MainPage() {
   // 년도 필터 변경 핸들러 수정
   const handleYearFilterChange = (year) => {
     setYearFilter(year);
-    setDisplayYear(Number(year)); // 년도 표시 업데이트
+    setDisplayYear(Number(year)); // 년 표시 업데이트
     setCurrentPage(1);
   };
+
+  // 초기 상태 설정 (useEffect 내부 또는 컴포넌트 최상단)
+  useEffect(() => {
+    // 초기 로딩 시 현재 월 선택
+    // setSelectedMonths([currentMonth]);
+  }, []); // 빈 의존성 배열로 초기 로딩 시에만 실행
 
   if (loading || isLoading) {
     return (
@@ -369,24 +368,26 @@ export default function MainPage() {
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Header />
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
-        <div className="max-w-7xl mx-auto">
+        <div className="max-w-8xl mx-auto">
           <div className="flex flex-col gap-8">
-            {/* 상단 영역 - 4등분 그리드 */}
+            {/* 단 역 - 4등분 그리드 */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* 타이틀 영역 - 3칸 차지 (왼쪽 패딩 제거) */}
               <div className="lg:col-span-3 flex flex-col gap-2 pl-0">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                   {displayYear}년 {displayMonth}월
                   <span className="ml-2 text-xl text-blue-500 dark:text-blue-400 font-semibold">
-                    ({displayMonth}월 공수 {getCurrentMonthTotalEffort(projects)}m / {convertEffortToDay(getCurrentMonthTotalEffort(projects))})
+                    ({displayMonth}월 공수 {calculateTotalEffort(projects)} / {convertEffortToDay(calculateTotalEffort(projects))})
                   </span>
                 </h2>
-                <h1 className="text-lg text-gray-700 dark:text-gray-300">
-                  전체 프로젝트 목록
-                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                    (총 {filteredProjects.length}개)
-                  </span>
-                </h1>
+                <h3 className="text-lg sm:text-xl font-bold 
+                  line-clamp-3 
+                  word-break-keep-all 
+                  overflow-hidden 
+                  text-gray-900 dark:text-white"
+                >
+                  메인페이지 내 일부 기능 개선
+                </h3>
               </div>
 
               {/* 필터 옵션 영역 - 1칸 차지 (오른쪽 패딩 제거) */}
@@ -595,35 +596,46 @@ export default function MainPage() {
 
               {/* 버튼 영역 - 1칸 차지 (오른쪽 패딩 제거) */}
               <div className="lg:col-span-1 grid grid-cols-2 gap-3 pr-0">
-                <button className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
-                  hover:bg-blue-600 active:bg-blue-700
-                  transition-all duration-200
-                  flex items-center justify-center gap-2
-                  shadow-sm hover:shadow-md">
+                <button 
+                  onClick={() => router.push('/new')}  // 프로젝트 추가 페이지로 이동
+                  className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
+                    hover:bg-blue-600 active:bg-blue-700
+                    transition-all duration-200
+                    flex items-center justify-center gap-2
+                    shadow-sm hover:shadow-md">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                   </svg>
-                  추가
+                  프로젝트 추가
                 </button>
-                <button className="px-4 py-2.5 text-sm font-medium
-                  bg-green-500 hover:bg-green-600 active:bg-green-700
-                  text-white rounded-lg transition-all duration-200
-                  flex items-center justify-center gap-2
-                  shadow-sm hover:shadow-md">
+                <button 
+                  onClick={() => {
+                    console.log("복사 모드 토글"); // 디버깅용
+                    setIsCopyMode(!isCopyMode);
+                  }}
+                  className={`px-4 py-2.5 text-sm font-medium rounded-lg
+                    transition-all duration-200
+                    flex items-center justify-center gap-2
+                    shadow-sm hover:shadow-md
+                    ${isCopyMode 
+                      ? 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white' 
+                      : 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white'
+                    }`}
+                >
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                     <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                     <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                   </svg>
-                  복사
+                  {isCopyMode ? '복사 취소' : '프로젝트 복사'}
                 </button>
               </div>
             </div>
           </div>
 
           <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {currentProjects.map((project) => (
+            {currentProjects.map((project, index) => (
               <div
-                key={project.id}
+                key={`${project.id}-${index}`}
                 onClick={() => {
                   if (!isCopyMode) {
                     router.push(`/detail/${project.userId}/${project.id}`);
@@ -637,7 +649,7 @@ export default function MainPage() {
                        ${isCopyMode ? 'opacity-100' : 'opacity-60 dark:opacity-40 hover:opacity-90 dark:hover:opacity-70'}`
                     : 'bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 opacity-100'
                   }
-                  ${project.status === '종료'
+                  ${project.status === '대기'
                     ? 'hover:bg-gray-100 dark:hover:bg-gray-800'
                     : 'hover:bg-white dark:hover:bg-gray-800'
                   }`}
@@ -650,6 +662,7 @@ export default function MainPage() {
                           ? 'text-gray-500 dark:text-gray-500' 
                           : 'text-gray-900 dark:text-white'
                         }`}
+                        style={{ wordBreak: 'keep-all' }}
                       >
                         {project.title}
                       </h3>
@@ -663,9 +676,6 @@ export default function MainPage() {
                         {project.status}
                       </div>
                     </div>
-                    <p className="text-sm sm:text-base text-gray-600 dark:text-gray-400 line-clamp-2">
-                      {project.description}
-                    </p>
                   </div>
 
                   <div className="mt-auto">
@@ -677,15 +687,21 @@ export default function MainPage() {
                         </span>
                       </div>
                       <div className="text-sm flex items-center justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">시작일:</span>
+                        <span className="text-gray-500 dark:text-gray-400">TF요청일:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {project.startDate?.toDate().toLocaleDateString()}
                         </span>
                       </div>
                       <div className="text-sm flex items-center justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">종료일:</span>
+                        <span className="text-gray-500 dark:text-gray-400">완료예정일:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {project.endDate?.toDate().toLocaleDateString()}
+                        </span>
+                      </div>
+                      <div className="text-sm flex items-center justify-between">
+                        <span className="text-gray-500 dark:text-gray-400">실 완료일:</span>
+                        <span className="font-medium text-gray-900 dark:text-white">
+                          {project.completionDate?.toDate().toLocaleDateString() || '-'}
                         </span>
                       </div>
                     </div>
@@ -694,30 +710,32 @@ export default function MainPage() {
                       <div className="text-sm flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">전체 공수:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
-                          {project.totalEffort > 0 ? `${Number.isInteger(project.totalEffort) ? Math.floor(project.totalEffort) : project.totalEffort.toFixed(1)}m` : '-'}
+                          {`${Number(project.planning?.effort || 0) + 
+                             Number(project.design?.effort || 0) + 
+                             Number(project.publishing?.effort || 0)}m`}
                         </span>
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
                       {project.planning.name && (
-                        <span className="px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-                          기획: {project.planning.name} ({project.planning.effort}m)
+                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-center">
+                          기획 {project.planning.name} {project.planning.effort}m
                         </span>
                       )}
                       {project.design.name && (
-                        <span className="px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-                          디자인: {project.design.name} ({project.design.effort}m)
+                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-center">
+                          디자인 {project.design.name} {project.design.effort}m
                         </span>
                       )}
                       {project.publishing.name && (
-                        <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200">
-                          퍼블: {project.publishing.name} ({project.publishing.effort}m)
+                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-center">
+                          퍼블 {project.publishing.name} {project.publishing.effort}m
                         </span>
                       )}
                       {project.development.name && (
-                        <span className="px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-                          개발: {project.development.name} ({project.development.effort}m)
+                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 text-center">
+                          개발 {project.development.name} {project.development.effort}m
                         </span>
                       )}
                     </div>
@@ -725,13 +743,11 @@ export default function MainPage() {
                     {isCopyMode && (
                       <div className="mt-4 flex justify-end">
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleCopy(project.id);
-                          }}
+                          onClick={(e) => handleCopyClick(e, project.id, project.userId)}
                           className="px-4 py-2 text-sm bg-green-500 text-white rounded-md 
-                            hover:bg-green-600 transition-colors duration-200 flex items-center 
-                            justify-center gap-2 opacity-100"
+                            hover:bg-green-600 active:bg-green-700 
+                            transition-colors duration-200 
+                            flex items-center justify-center gap-2"
                         >
                           <svg 
                             xmlns="http://www.w3.org/2000/svg" 
@@ -742,7 +758,7 @@ export default function MainPage() {
                             <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                             <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                           </svg>
-                          복사
+                          복사하기
                         </button>
                       </div>
                     )}
