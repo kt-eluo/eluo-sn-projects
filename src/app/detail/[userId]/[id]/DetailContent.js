@@ -376,14 +376,15 @@ export default function DetailContent({ userId, projectId }) {
           {/* 프로젝트 헤더 */}
           <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-2xl font-bold text-white flex-1 min-w-0">
                 {isEditing ? (
                   <input
                     type="text"
                     value={editedProject.title}
                     onChange={(e) => setEditedProject({...editedProject, title: e.target.value})}
-                    className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                      text-white placeholder-white/60 focus:ring-2 focus:ring-white/50"
+                    className="w-[calc(100%-2rem)] px-4 py-2 rounded-lg bg-white/10 
+                      border border-white/20 text-white placeholder-white/60 
+                      focus:ring-2 focus:ring-white/50 transition-all duration-200"
                     placeholder="프로젝트 제목"
                   />
                 ) : (
@@ -405,7 +406,7 @@ export default function DetailContent({ userId, projectId }) {
                 <div className={`px-4 py-1.5 rounded-full text-sm font-medium
                   ${project.status === '진행' 
                     ? 'bg-green-100 text-green-800' 
-                    : project.status === '대기' 
+                    : project.status === '대��' 
                       ? 'bg-yellow-100 text-yellow-800'
                       : 'bg-red-100 text-red-800'}`}
                 >
@@ -436,7 +437,7 @@ export default function DetailContent({ userId, projectId }) {
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">TF요청일</div>
+                <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">TF요일</div>
                 {isEditing ? (
                   <input
                     type="date"
@@ -587,7 +588,7 @@ export default function DetailContent({ userId, projectId }) {
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="콘텐츠 등록">콘텐츠 등록</option>
-                      <option value="콘텐츠 수정">콘텐츠 수정</option>
+                      <option value="콘텐츠 수정">콘텐�� 수정</option>
                       <option value="">필드없음</option>
                     </select>
                   ) : (

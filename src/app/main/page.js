@@ -70,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 용자의 프로젝트를 ��져오기  users 컬렉션을 먼저 조회
+      // 모든 용자의 프로젝트를 져오기  users 컬렉션을 먼저 조회
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -312,7 +312,7 @@ export default function MainPage() {
       const userProjectsRef = collection(db, 'projects', user.uid, 'userProjects');
       const docRef = await addDoc(userProjectsRef, newProjectData);
 
-      console.log("프로젝트 복사 ���료:", docRef.id); // 디버깅용
+      console.log("프로젝트 복사 료:", docRef.id); // 디버깅용
       
       // 4. 성공 메시지 표시 및 복사 모드 종료
       alert('프로젝트가 성공적으로 복사되었습니다.');
@@ -390,14 +390,18 @@ export default function MainPage() {
                     ? `${selectedMonths[0]}월`
                     : selectedMonths.length === 0 
                       ? `${currentMonth}월`
-                      : '전체'
+                      : selectedMonths.length === 12
+                        ? '전체'
+                        : `${selectedMonths.join(', ')}월`
                   }
                   <span className="ml-2 text-xl text-blue-500 dark:text-blue-400 font-semibold">
                     ({selectedMonths.length === 1 
                       ? `${selectedMonths[0]}월` 
                       : selectedMonths.length === 0 
                         ? `${currentMonth}월`
-                        : '전체'} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
+                        : selectedMonths.length === 12
+                          ? '전체'
+                          : `${selectedMonths.join(', ')}월`} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
                   </span>
                 </h2>
 
@@ -779,7 +783,7 @@ export default function MainPage() {
                             <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                             <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                           </svg>
-                          ���사하기
+                          복사하기
                         </button>
                       </div>
                     )}
