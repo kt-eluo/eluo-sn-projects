@@ -70,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 용자의 프로젝트를 져오기  users 컬렉션을 먼저 조회
+      // 모든 용자의 프로젝트를 ��오기  users 컬렉션을 먼저 조회
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -384,8 +384,8 @@ export default function MainPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* 타이틀 영역 - 3칸 차지 (왼쪽 패딩 제거) */}
               <div className="lg:col-span-3 flex flex-col gap-2 pl-0">
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                  {displayYear}년 {' '}
+                <h2 className="flex flex-col sm:flex-row sm:items-center text-2xl font-bold text-gray-800 dark:text-gray-200">
+                  {yearFilter}년 {' '}
                   {selectedMonths.length === 1 
                     ? `${selectedMonths[0]}월`
                     : selectedMonths.length === 0 
@@ -394,14 +394,14 @@ export default function MainPage() {
                         ? '전체'
                         : `${selectedMonths.join(', ')}월`
                   }
-                  <span className="ml-2 text-xl text-blue-500 dark:text-blue-400 font-semibold">
+                  <span className="mt-2 sm:mt-0 sm:ml-2 text-lg sm:text-xl text-blue-500 dark:text-blue-400 font-semibold">
                     ({selectedMonths.length === 1 
                       ? `${selectedMonths[0]}월` 
                       : selectedMonths.length === 0 
                         ? `${currentMonth}월`
                         : selectedMonths.length === 12
                           ? '전체'
-                          : `${selectedMonths.join(', ')}월`} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
+                          : `${selectedMonths.join(', ')}월`} 공수 {calculateTotalEffort()}m / {convertEffortToDay(calculateTotalEffort())}일)
                   </span>
                 </h2>
 
@@ -839,7 +839,7 @@ export default function MainPage() {
             <div className="text-center py-12">
               <p className="text-gray-500 dark:text-gray-400">
                 {statusFilter === '전체' && periodFilter === '전체' 
-                  ? '등록된 로젝트가 없습니다.' 
+                  ? '등록된 로젝트��� 없습니다.' 
                   : '선택한 필터에 해당하는 로트 없습다.'}
               </p>
             </div>

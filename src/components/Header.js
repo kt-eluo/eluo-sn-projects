@@ -46,7 +46,7 @@ export function Header() {
 
   return (
     <header className="bg-white dark:bg-gray-800 shadow-sm">
-      <div className="max-w-8xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+      <div className="max-w-8xl mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-0">
         <div className="flex justify-between items-center h-16 w-full">
           {/* 로고 영역 */}
           <div className="flex-shrink-0 cursor-pointer">
