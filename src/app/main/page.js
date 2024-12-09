@@ -70,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 용자의 프로젝트를 ��오기  users 컬렉션을 먼저 조회
+      // 모든 용자의 프로젝트를 가져오기  users 컬렉션을 먼저 조회
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -401,7 +401,7 @@ export default function MainPage() {
                         ? `${currentMonth}월`
                         : selectedMonths.length === 12
                           ? '전체'
-                          : `${selectedMonths.join(', ')}월`} 공수 {calculateTotalEffort()}m / {convertEffortToDay(calculateTotalEffort())}일)
+                          : `${selectedMonths.join(', ')}월`} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
                   </span>
                 </h2>
 
