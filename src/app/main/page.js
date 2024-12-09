@@ -621,38 +621,42 @@ export default function MainPage() {
 
               {/* 버튼 영역 - 1칸 차지 (오른쪽 패딩 제거) */}
               <div className="lg:col-span-1 grid grid-cols-2 gap-3 pr-0">
-                <button 
-                  onClick={() => router.push('/new')}  // 프로젝트 추가 페이지로 이동
-                  className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
-                    hover:bg-blue-600 active:bg-blue-700
-                    transition-all duration-200
-                    flex items-center justify-center gap-2
-                    shadow-sm hover:shadow-md">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                  </svg>
-                  프로젝트 추가
-                </button>
-                <button 
-                  onClick={() => {
-                    console.log("복사 모드 토"); // 디버깅용
-                    setIsCopyMode(!isCopyMode);
-                  }}
-                  className={`px-4 py-2.5 text-sm font-medium rounded-lg
-                    transition-all duration-200
-                    flex items-center justify-center gap-2
-                    shadow-sm hover:shadow-md
-                    ${isCopyMode 
-                      ? 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white' 
-                      : 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white'
-                    }`}
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                    <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
-                    <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
-                  </svg>
-                  {isCopyMode ? '복사 취소' : '프로젝트 복사'}
-                </button>
+                {isAdmin && (
+                  <>
+                    <button 
+                      onClick={() => router.push('/new')}
+                      className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
+                        hover:bg-blue-600 active:bg-blue-700
+                        transition-all duration-200
+                        flex items-center justify-center gap-2
+                        shadow-sm hover:shadow-md">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
+                      </svg>
+                      프로젝트 추가
+                    </button>
+                    <button 
+                      onClick={() => {
+                        console.log("복사 모드 토글"); // 디버깅용
+                        setIsCopyMode(!isCopyMode);
+                      }}
+                      className={`px-4 py-2.5 text-sm font-medium rounded-lg
+                        transition-all duration-200
+                        flex items-center justify-center gap-2
+                        shadow-sm hover:shadow-md
+                        ${isCopyMode 
+                          ? 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white' 
+                          : 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white'
+                        }`}
+                    >
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
+                        <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
+                      </svg>
+                      {isCopyMode ? '복사 취소' : '프로젝트 복사'}
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           </div>
@@ -839,7 +843,7 @@ export default function MainPage() {
             <div className="text-center py-12">
               <p className="text-gray-500 dark:text-gray-400">
                 {statusFilter === '전체' && periodFilter === '전체' 
-                  ? '등록된 로젝트��� 없습니다.' 
+                  ? '등록된 로젝트 없습니다.' 
                   : '선택한 필터에 해당하는 로트 없습다.'}
               </p>
             </div>
