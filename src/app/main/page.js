@@ -213,13 +213,16 @@ export default function MainPage() {
   const calculateTotalEffort = (projects) => {
     if (!Array.isArray(projects)) return 0
 
-    return projects.reduce((total, project) => {
+    const total = projects.reduce((total, project) => {
       const planningEffort = Number(project.planning?.effort || 0)
       const designEffort = Number(project.design?.effort || 0)
       const publishingEffort = Number(project.publishing?.effort || 0)
       
       return total + planningEffort + designEffort + publishingEffort
     }, 0)
+
+    // 소수점 3째자리에서 반올림하여 2째자리까지 표시
+    return Number(total.toFixed(2))
   }
 
   // 월 필터 핸들러 수정
@@ -306,7 +309,7 @@ export default function MainPage() {
       console.log("프로젝트 복사 완료:", docRef.id); // 디버깅용
       
       // 4. 성공 메시지 표시 및 복사 모드 종료
-      alert('프로젝트가 성공적으로 복사되었습니다.');
+      alert('프로젝트가 성공적으로 복사되었습���다.');
       setIsCopyMode(false);
       
       // 5. 프로젝트 목록 새로고침
@@ -375,19 +378,29 @@ export default function MainPage() {
               {/* 타이틀 영역 - 3칸 차지 (왼쪽 패딩 제거) */}
               <div className="lg:col-span-3 flex flex-col gap-2 pl-0">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
-                  {displayYear}년 {displayMonth}월
+                  {displayYear}년 {' '}
+                  {selectedMonths.length === 1 
+                    ? `${selectedMonths[0]}월`
+                    : selectedMonths.length === 0 
+                      ? `${currentMonth}월`
+                      : '전체'
+                  }
                   <span className="ml-2 text-xl text-blue-500 dark:text-blue-400 font-semibold">
-                    ({displayMonth}월 공수 {calculateTotalEffort(projects)} / {convertEffortToDay(calculateTotalEffort(projects))})
+                    ({selectedMonths.length === 1 
+                      ? `${selectedMonths[0]}월` 
+                      : selectedMonths.length === 0 
+                        ? `${currentMonth}월`
+                        : '전체'} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
                   </span>
                 </h2>
-                <h3 className="text-lg sm:text-xl font-bold 
-                  line-clamp-3 
-                  word-break-keep-all 
-                  overflow-hidden 
-                  text-gray-900 dark:text-white"
-                >
-                  메인페이지 내 일부 기능 개선
-                </h3>
+
+                <h1 className="text-lg text-gray-700 dark:text-gray-300">
+                  전체 프로젝트 목록
+                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                    (총 {filteredProjects.length}개)
+                  </span>
+                </h1>
+
               </div>
 
               {/* 필터 옵션 영역 - 1칸 차지 (오른쪽 패딩 제거) */}

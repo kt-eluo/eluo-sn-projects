@@ -22,7 +22,7 @@ export default function Page() {
   
   const [newProject, setNewProject] = useState({
     title: '',
-    status: '대기',
+    status: '진행',
     classification: '',
     channel: '',
     service: '',
@@ -71,7 +71,7 @@ export default function Page() {
       updatedProject.publishing.effort
     ]
     
-    // 모든 effort 값이 빈 문자열인지 확인
+    // 모든 effort ��이 빈 문자열인지 확인
     const allEmpty = efforts.every(effort => effort === '')
     if (allEmpty) return null
 
@@ -224,7 +224,7 @@ export default function Page() {
                 </div>
                 
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">총료예정일</div>
+                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">종료예정일</div>
                   <input
                     type="date"
                     value={formatDate(newProject.endDate)}
@@ -253,7 +253,7 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* 작업구분 섹션 */}
+              {/* 작업구분 섹��� */}
               <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 mb-8">
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">작업구분</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -462,7 +462,7 @@ export default function Page() {
                     border border-gray-300 dark:border-gray-600 
                     text-gray-900 dark:text-white"
                   rows="4"
-                  placeholder="프로젝트 설명을 입력하세요"
+                  placeholder="프로젝트 설명을 입력하��요"
                 />
               </div>
 

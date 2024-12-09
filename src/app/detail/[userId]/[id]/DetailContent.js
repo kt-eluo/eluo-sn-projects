@@ -416,40 +416,80 @@ export default function DetailContent({ userId, projectId }) {
           </div>
 
           <div className="p-6 space-y-8">
-            {/* 날짜 및 수 정보 */}
+            {/* 날짜 및 수정 정보 */}
             <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">현업요청일</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {formatDate(project.requestDate)}
-                </div>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={formatDate(editedProject.requestDate)}
+                    onChange={(e) => setEditedProject({...editedProject, requestDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  />
+                ) : (
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatDate(project.requestDate)}
+                  </div>
+                )}
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">TF요청일</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {formatDate(project.startDate)}
-                </div>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={formatDate(editedProject.startDate)}
+                    onChange={(e) => setEditedProject({...editedProject, startDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  />
+                ) : (
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatDate(project.startDate)}
+                  </div>
+                )}
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">완료예정일</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {formatDate(project.endDate)}
-                </div>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={formatDate(editedProject.endDate)}
+                    onChange={(e) => setEditedProject({...editedProject, endDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  />
+                ) : (
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatDate(project.endDate)}
+                  </div>
+                )}
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">실 완료일</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {formatDate(project.completionDate) || '-'}
-                </div>
+                {isEditing ? (
+                  <input
+                    type="date"
+                    value={formatDate(editedProject.completionDate)}
+                    onChange={(e) => setEditedProject({...editedProject, completionDate: e.target.value ? new Date(e.target.value) : null})}
+                    className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  />
+                ) : (
+                  <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                    {formatDate(project.completionDate) || '-'}
+                  </div>
+                )}
               </div>
               
               <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
                 <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">총 공수</div>
-                <div className="text-lg font-semibold text-gray-900 dark:text-white">
-                  {calculateTotalEffort(project) || '0m'}
+                <div className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {calculateTotalEffort(isEditing ? editedProject : project)}
                 </div>
               </div>
             </div>
@@ -583,7 +623,7 @@ export default function DetailContent({ userId, projectId }) {
               </div>
             </div>
 
-            {/* 담���자 정보 섹션 */}
+            {/* 담당자 정보 섹션 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {/* 기획 */}
               <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
@@ -764,7 +804,7 @@ export default function DetailContent({ userId, projectId }) {
                   className="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-700 
                     border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                   rows="8"
-                  placeholder="프로젝트 설을 입력하세요"
+                  placeholder="프로젝트 설명을 입력하세요"
                 />
               ) : (
                 <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
