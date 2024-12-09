@@ -588,7 +588,7 @@ export default function DetailContent({ userId, projectId }) {
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="콘텐츠 등록">콘텐츠 등록</option>
-                      <option value="콘텐츠 수정">콘텐�� 수정</option>
+                      <option value="콘텐츠 수정">콘텐츠 수정</option>
                       <option value="">필드없음</option>
                     </select>
                   ) : (
