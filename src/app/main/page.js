@@ -390,7 +390,7 @@ export default function MainPage() {
                       ? `${selectedMonths[0]}월` 
                       : selectedMonths.length === 0 
                         ? `${currentMonth}월`
-                        : '전체'} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
+                        : '전체'} 공수 {calculateTotalEffort(filteredProjects)}m)
                   </span>
                 </h2>
 
