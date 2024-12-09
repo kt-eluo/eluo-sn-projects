@@ -462,7 +462,7 @@ export default function Page() {
                     border border-gray-300 dark:border-gray-600 
                     text-gray-900 dark:text-white"
                   rows="4"
-                  placeholder="프로젝트 설명을 입력하��요"
+                  placeholder="프로젝트 설명을 입력하세요"
                 />
               </div>
 
@@ -477,7 +477,7 @@ export default function Page() {
                       : 'bg-blue-500 hover:bg-blue-600 transition-colors'
                     }`}
                 >
-                  {isLoading ? '장 중...' : '저장'}
+                  {isLoading ? '저장 중...' : '저장'}
                 </button>
                 <button
                   type="button"

@@ -33,7 +33,7 @@ export default function MainPage() {
 
   // 상태 관리
   const [yearFilter, setYearFilter] = useState(currentYear)
-  const [selectedMonths, setSelectedMonths] = useState([])
+  const [selectedMonths, setSelectedMonths] = useState([currentMonth])
   const [isAllMonthsSelected, setIsAllMonthsSelected] = useState(false)
   const [displayYear, setDisplayYear] = useState(Number(currentYear))
   const [displayMonth, setDisplayMonth] = useState(currentMonth)
@@ -70,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 용자의 프로젝트를 가져오기  users 컬렉션을 먼저 조회
+      // 모든 용자의 프로젝트를 ��져오기  users 컬렉션을 먼저 조회
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -114,7 +114,7 @@ export default function MainPage() {
     }
   }, [user, loading, router]);
 
-  // 짜 필터링 함수 수정
+  // 날짜 필터링 함수 수정
   const getFilteredProjects = (projects) => {
     let filtered = projects;
 
@@ -128,8 +128,8 @@ export default function MainPage() {
     // 커스텀 날짜 범위 필터링
     if (startDate && endDate) {
       filtered = filtered.filter(project => {
-        const projectStartDate = project.startDate?.toDate();
-        if (!projectStartDate) return false;
+        const projectEndDate = project.endDate?.toDate();
+        if (!projectEndDate) return false;
         
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
@@ -137,25 +137,25 @@ export default function MainPage() {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
         
-        return projectStartDate >= start && projectStartDate <= end;
+        return projectEndDate >= start && projectEndDate <= end;
       });
     } else {
       // 년도 필터 적용
       filtered = filtered.filter(project => {
-        const startDate = project.startDate?.toDate();
-        if (!startDate) return false;
+        const endDate = project.endDate?.toDate();
+        if (!endDate) return false;
         
-        const projectYear = startDate.getFullYear().toString();
+        const projectYear = endDate.getFullYear().toString();
         return yearFilter === projectYear;
       });
 
       // 월별 필터 적용 - selectedMonths가 비어있으면 모든 월 표시
       if (selectedMonths.length > 0) {
         filtered = filtered.filter(project => {
-          const startDate = project.startDate?.toDate();
-          if (!startDate) return false;
+          const endDate = project.endDate?.toDate();
+          if (!endDate) return false;
           
-          const projectMonth = startDate.getMonth() + 1;
+          const projectMonth = endDate.getMonth() + 1;
           return selectedMonths.includes(projectMonth);
         });
       }
@@ -229,8 +229,8 @@ export default function MainPage() {
   const handleMonthFilterChange = (month) => {
     if (month === '전체') {
       if (isAllMonthsSelected) {
-        // 전체가 선택된 상태서 클릭하면 모두 해제
-        setSelectedMonths([]);
+        // 전체가 선택된 상태에서 클릭하면 12월만 선택
+        setSelectedMonths([12]);
         setIsAllMonthsSelected(false);
       } else {
         // 전체가 선택되지 않은 상태에서 클릭하면 모두 선택
@@ -238,12 +238,15 @@ export default function MainPage() {
         setIsAllMonthsSelected(true);
       }
     } else {
-      // 개별 월 선택 시 (현재 월 포함)
+      // 개별 월 선택 시
       setSelectedMonths(prev => {
         let newSelection;
         if (prev.includes(month)) {
-          // 이미 선택된 월 클릭 시 해제
+          // 이미 선택된 월 클릭 시 해제하되, 모든 월이 해제되면 12월 선택
           newSelection = prev.filter(m => m !== month);
+          if (newSelection.length === 0) {
+            newSelection = [12];
+          }
         } else {
           // 새로운 월 선택 시 추가
           newSelection = [...prev, month].sort((a, b) => a - b);
@@ -309,7 +312,7 @@ export default function MainPage() {
       const userProjectsRef = collection(db, 'projects', user.uid, 'userProjects');
       const docRef = await addDoc(userProjectsRef, newProjectData);
 
-      console.log("프로젝트 복사 완료:", docRef.id); // 디버깅용
+      console.log("프로젝트 복사 ���료:", docRef.id); // 디버깅용
       
       // 4. 성공 메시지 표시 및 복사 모드 종료
       alert('프로젝트가 성공적으로 복사되었습니다.');
@@ -356,10 +359,12 @@ export default function MainPage() {
     setCurrentPage(1);
   };
 
-  // 초기 상태 설정 (useEffect 내부 또는 컴포넌트 최상단)
+  // 초기 상태 설정
   useEffect(() => {
     // 초기 로딩 시 현재 월 선택
-    // setSelectedMonths([currentMonth]);
+    setSelectedMonths([currentMonth]);
+    setYearFilter(currentYear);
+    setIsAllMonthsSelected(false);
   }, []); // 빈 의존성 배열로 초기 로딩 시에만 실행
 
   if (loading || isLoading) {
@@ -375,8 +380,7 @@ export default function MainPage() {
       <Header />
       <div className="px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
         <div className="max-w-8xl mx-auto">
-          <div className="flex flex-col gap-8">
-            {/* 단 역 - 4등분 그리드 */}
+          <div className="flex flex-col gap-16">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* 타이틀 영역 - 3칸 차지 (왼쪽 패딩 제거) */}
               <div className="lg:col-span-3 flex flex-col gap-2 pl-0">
@@ -450,6 +454,7 @@ export default function MainPage() {
                             : 'bg-white dark:bg-gray-700 text-gray-900 dark:text-white'
                           }`}
                       >
+                        <option value="2025">2025년</option>
                         <option value="2024">2024년</option>
                         <option value="2023">2023년</option>
                       </select>
@@ -626,7 +631,7 @@ export default function MainPage() {
                 </button>
                 <button 
                   onClick={() => {
-                    console.log("복사 모드 토글"); // 디버깅용
+                    console.log("복사 모드 토"); // 디버깅용
                     setIsCopyMode(!isCopyMode);
                   }}
                   className={`px-4 py-2.5 text-sm font-medium rounded-lg
@@ -774,7 +779,7 @@ export default function MainPage() {
                             <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                             <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                           </svg>
-                          복사하기
+                          ���사하기
                         </button>
                       </div>
                     )}
