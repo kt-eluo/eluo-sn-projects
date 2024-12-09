@@ -258,10 +258,13 @@ export default function MainPage() {
     setCurrentPage(1);
   };
 
-  // 수를 일수로 환하는 함수 수정
+  // 공수를 일수로 변환하는 함수 수정
   const convertEffortToDay = (effort) => {
     if (effort === '-' || !effort) return '-'
-    const days = effort / 0.5
+    
+    // 1.0이 2일이 되도록 수정
+    const days = effort * 2
+    
     // 소수점이 없으면 정수로, 있으면 소수점 1자리까지 표시
     return days > 0 ? `${Number.isInteger(days) ? Math.floor(days) : days.toFixed(1)}일` : '-'
   }
@@ -309,7 +312,7 @@ export default function MainPage() {
       console.log("프로젝트 복사 완료:", docRef.id); // 디버깅용
       
       // 4. 성공 메시지 표시 및 복사 모드 종료
-      alert('프로젝트가 성공적으로 복사되었습���다.');
+      alert('프로젝트가 성공적으로 복사되었습니다.');
       setIsCopyMode(false);
       
       // 5. 프로젝트 목록 새로고침
@@ -390,7 +393,7 @@ export default function MainPage() {
                       ? `${selectedMonths[0]}월` 
                       : selectedMonths.length === 0 
                         ? `${currentMonth}월`
-                        : '전체'} 공수 {calculateTotalEffort(filteredProjects)}m)
+                        : '전체'} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
                   </span>
                 </h2>
 
@@ -694,7 +697,7 @@ export default function MainPage() {
                   <div className="mt-auto">
                     <div className="mb-4 space-y-2">
                       <div className="text-sm flex items-center justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">현업요청일:</span>
+                        <span className="text-gray-500 dark:text-gray-400">현업요청:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {project.requestDate?.toDate().toLocaleDateString()}
                         </span>
