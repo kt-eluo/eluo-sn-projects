@@ -16,3 +16,7 @@
     color: #666;
     margin: 4px 0;
   }
+
+  /* custom */
+  .mn-box {width: 20rem; text-align: center;}
+  .mn-card-white {background-color: rgb(243, 244, 246);}

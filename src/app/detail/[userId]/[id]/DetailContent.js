@@ -355,6 +355,26 @@ export default function DetailContent({ userId, projectId }) {
     }
   };
 
+  // 상태 변경 핸들러 추가
+  const handleStatusChange = async (newStatus) => {
+    try {
+      const db = getFirestore();
+      const projectRef = doc(db, 'projects', userId, 'userProjects', projectId);
+      
+      await updateDoc(projectRef, {
+        status: newStatus,
+        updateAt: serverTimestamp()
+      });
+
+      setProject({
+        ...project,
+        status: newStatus
+      });
+    } catch (error) {
+      console.error('상태 변경 중 오류:', error);
+    }
+  };
+
   if (isLoading) {
     return <div>로딩 중...</div>;
   }
@@ -390,18 +410,23 @@ export default function DetailContent({ userId, projectId }) {
                   project.title
                 )}
               </h1>
-              {isEditing ? (
+              {isAdmin && (
                 <select
-                  value={editedProject.status}
-                  onChange={(e) => setEditedProject({...editedProject, status: e.target.value})}
-                  className="px-4 py-1.5 rounded-full text-sm font-medium bg-white 
-                    border border-white/20 text-gray-900 focus:ring-2 focus:ring-white/50"
+                  value={project.status}
+                  onChange={(e) => handleStatusChange(e.target.value)}
+                  className={`px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer
+                    ${project.status === '진행' 
+                      ? 'bg-green-100 text-green-800 hover:bg-green-200' 
+                      : project.status === '대기' 
+                        ? 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+                        : 'bg-red-100 text-red-800 hover:bg-red-200'}`}
                 >
-                  <option value="대기" className="text-gray-900">대기</option>
-                  <option value="진행" className="text-gray-900">진행</option>
-                  <option value="종료" className="text-gray-900">종료</option>
+                  <option value="대기" className="bg-white text-gray-900">대기</option>
+                  <option value="진행" className="bg-white text-gray-900">진행</option>
+                  <option value="종료" className="bg-white text-gray-900">종료</option>
                 </select>
-              ) : (
+              )}
+              {!isAdmin && (
                 <div className={`px-4 py-1.5 rounded-full text-sm font-medium
                   ${project.status === '진행' 
                     ? 'bg-green-100 text-green-800' 
@@ -494,34 +519,10 @@ export default function DetailContent({ userId, projectId }) {
               </div>
             </div>
 
-            {/* 작업구분 섹션 추가 */}
+            {/* 작업구분 섹션 수정 */}
             <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">작업구분</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {/* 분류 */}
-                <div className="flex flex-col">
-                  <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">분류</span>
-                  {isEditing ? (
-                    <select
-                      value={editedProject.classification || ''}
-                      onChange={(e) => setEditedProject({
-                        ...editedProject,
-                        classification: e.target.value || null
-                      })}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                    >
-                      <option value="">필드없음 (null 값)</option>
-                      <option value="WEB+MW">WEB+MW</option>
-                      <option value="">필드없음</option>
-                    </select>
-                  ) : (
-                    <span className="text-base text-gray-900 dark:text-white">
-                      {project.classification || '필드없음'}
-                    </span>
-                  )}
-                </div>
-
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">작업구분</h3>
+              <div className="grid grid-cols-4 gap-4">
                 {/* 채널 */}
                 <div className="flex flex-col">
                   <span className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">채널</span>
@@ -532,7 +533,7 @@ export default function DetailContent({ userId, projectId }) {
                         ...editedProject,
                         channel: e.target.value || null
                       })}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700 
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="TF팀">TF팀</option>
@@ -540,7 +541,7 @@ export default function DetailContent({ userId, projectId }) {
                       <option value="">필드없음</option>
                     </select>
                   ) : (
-                    <span className="text-base text-gray-900 dark:text-white">
+                    <span className="text-sm text-gray-900 dark:text-white">
                       {project.channel || '필드없음'}
                     </span>
                   )}
@@ -556,7 +557,7 @@ export default function DetailContent({ userId, projectId }) {
                         ...editedProject,
                         service: e.target.value || null
                       })}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700 
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="고객지원">고객지원</option>
@@ -567,7 +568,7 @@ export default function DetailContent({ userId, projectId }) {
                       <option value="">필드없음</option>
                     </select>
                   ) : (
-                    <span className="text-base text-gray-900 dark:text-white">
+                    <span className="text-sm text-gray-900 dark:text-white">
                       {project.service || '필드없음'}
                     </span>
                   )}
@@ -583,7 +584,7 @@ export default function DetailContent({ userId, projectId }) {
                         ...editedProject,
                         category: e.target.value || null
                       })}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700 
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="콘텐츠 등록">콘텐츠 등록</option>
@@ -591,7 +592,7 @@ export default function DetailContent({ userId, projectId }) {
                       <option value="">필드없음</option>
                     </select>
                   ) : (
-                    <span className="text-base text-gray-900 dark:text-white">
+                    <span className="text-sm text-gray-900 dark:text-white">
                       {project.category || '필드없음'}
                     </span>
                   )}
@@ -656,7 +657,7 @@ export default function DetailContent({ userId, projectId }) {
                 ) : (
                   <div className="flex flex-col space-y-1">
                     <span className="text-blue-600 dark:text-blue-400 font-medium">
-                      {project.planning.name || '미정'}
+                      {project.planning.name || '��정'}
                     </span>
                     {project.planning.effort && (
                       <span className="text-sm text-gray-500 dark:text-gray-400">

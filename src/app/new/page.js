@@ -71,7 +71,7 @@ export default function Page() {
       updatedProject.publishing.effort
     ]
     
-    // 모든 effort ��이 빈 문자열인지 확인
+    // 모든 effort 이 빈 문자열인지 확인
     const allEmpty = efforts.every(effort => effort === '')
     if (allEmpty) return null
 
@@ -253,31 +253,17 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* 작업구분 섹��� */}
-              <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6 mb-8">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">작업구분</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* 분류 */}
-                  <div className="p-4 bg-cyan-50 dark:bg-cyan-900/20 rounded-lg">
-                    <h4 className="font-medium text-cyan-900 dark:text-cyan-100 mb-2">분류</h4>
-                    <select
-                      value={newProject.classification}
-                      onChange={(e) => setNewProject({...newProject, classification: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                    >
-                      <option value="">필드없음</option>
-                      <option value="WEB+MW">WEB+MW</option>
-                    </select>
-                  </div>
-
+              {/* 작업구분 섹션 */}
+              <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6">
+                <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">작업구분</h3>
+                <div className="grid grid-cols-4 gap-3">
                   {/* 채널 */}
-                  <div className="p-4 bg-violet-50 dark:bg-violet-900/20 rounded-lg">
-                    <h4 className="font-medium text-violet-900 dark:text-violet-100 mb-2">채널</h4>
+                  <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
+                    <h4 className="text-[11px] font-medium text-blue-900 dark:text-blue-100 mb-1.5">채널</h4>
                     <select
-                      value={newProject.channel}
-                      onChange={(e) => setNewProject({...newProject, channel: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      value={newProject.channel || ''}
+                      onChange={(e) => setNewProject({...newProject, channel: e.target.value || null})}
+                      className="w-full px-2 py-1 text-[11px] rounded-lg bg-white dark:bg-gray-700 
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="">필드없음</option>
@@ -287,12 +273,12 @@ export default function Page() {
                   </div>
 
                   {/* 서비스 */}
-                  <div className="p-4 bg-indigo-50 dark:bg-indigo-900/20 rounded-lg">
-                    <h4 className="font-medium text-indigo-900 dark:text-indigo-100 mb-2">서비스</h4>
+                  <div className="bg-purple-50 dark:bg-purple-900/20 rounded-lg p-3">
+                    <h4 className="text-[11px] font-medium text-purple-900 dark:text-purple-100 mb-1.5">서비스</h4>
                     <select
-                      value={newProject.service}
-                      onChange={(e) => setNewProject({...newProject, service: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      value={newProject.service || ''}
+                      onChange={(e) => setNewProject({...newProject, service: e.target.value || null})}
+                      className="w-full px-2 py-1 text-[11px] rounded-lg bg-white dark:bg-gray-700 
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="">필드없음</option>
@@ -305,12 +291,12 @@ export default function Page() {
                   </div>
 
                   {/* 카테고리 */}
-                  <div className="p-4 bg-rose-50 dark:bg-rose-900/20 rounded-lg">
-                    <h4 className="font-medium text-rose-900 dark:text-rose-100 mb-2">카테고리</h4>
+                  <div className="bg-rose-50 dark:bg-rose-900/20 rounded-lg p-3">
+                    <h4 className="text-[11px] font-medium text-rose-900 dark:text-rose-100 mb-1.5">카테고리</h4>
                     <select
-                      value={newProject.category}
-                      onChange={(e) => setNewProject({...newProject, category: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      value={newProject.category || ''}
+                      onChange={(e) => setNewProject({...newProject, category: e.target.value || null})}
+                      className="w-full px-2 py-1 text-[11px] rounded-lg bg-white dark:bg-gray-700 
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="">필드없음</option>
@@ -320,12 +306,12 @@ export default function Page() {
                   </div>
 
                   {/* 배포방식 */}
-                  <div className="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
-                    <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2">배포방식</h4>
+                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-3">
+                    <h4 className="text-[11px] font-medium text-amber-900 dark:text-amber-100 mb-1.5">배포방식</h4>
                     <select
-                      value={newProject.deploymentType}
-                      onChange={(e) => setNewProject({...newProject, deploymentType: e.target.value})}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      value={newProject.deploymentType || ''}
+                      onChange={(e) => setNewProject({...newProject, deploymentType: e.target.value || null})}
+                      className="w-full px-2 py-1 text-[11px] rounded-lg bg-white dark:bg-gray-700 
                         border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="">필드없음</option>

@@ -70,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 용자의 프로젝트를 가져오기  users 컬렉션을 먼저 조회
+      // 모든 용자의 프로젝트를 져오기  users 컬렉션을 먼저 조회
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -128,8 +128,8 @@ export default function MainPage() {
     // 커스텀 날짜 범위 필터링
     if (startDate && endDate) {
       filtered = filtered.filter(project => {
-        const projectEndDate = project.endDate?.toDate();
-        if (!projectEndDate) return false;
+        const projectCompletionDate = project.completionDate?.toDate();
+        if (!projectCompletionDate) return false;
         
         const start = new Date(startDate);
         start.setHours(0, 0, 0, 0);
@@ -137,25 +137,25 @@ export default function MainPage() {
         const end = new Date(endDate);
         end.setHours(23, 59, 59, 999);
         
-        return projectEndDate >= start && projectEndDate <= end;
+        return projectCompletionDate >= start && projectCompletionDate <= end;
       });
     } else {
       // 년도 필터 적용
       filtered = filtered.filter(project => {
-        const endDate = project.endDate?.toDate();
-        if (!endDate) return false;
+        const completionDate = project.completionDate?.toDate();
+        if (!completionDate) return false;
         
-        const projectYear = endDate.getFullYear().toString();
+        const projectYear = completionDate.getFullYear().toString();
         return yearFilter === projectYear;
       });
 
-      // 월별 필터 적용 - selectedMonths가 비어있으면 모든 월 표시
+      // 월별 필터 적용
       if (selectedMonths.length > 0) {
         filtered = filtered.filter(project => {
-          const endDate = project.endDate?.toDate();
-          if (!endDate) return false;
+          const completionDate = project.completionDate?.toDate();
+          if (!completionDate) return false;
           
-          const projectMonth = endDate.getMonth() + 1;
+          const projectMonth = completionDate.getMonth() + 1;
           return selectedMonths.includes(projectMonth);
         });
       }
@@ -166,10 +166,18 @@ export default function MainPage() {
       statusFilter === '전체' || project.status === statusFilter
     );
 
+    // updateAt 기준으로 최신순 정렬하고, 같은 경우 completionDate로 정렬
     return filtered.sort((a, b) => {
-      const dateA = a.startDate?.toDate() || new Date(0);
-      const dateB = b.startDate?.toDate() || new Date(0);
-      return dateB - dateA;
+      const updateA = a.updateAt?.toDate() || new Date(0);
+      const updateB = b.updateAt?.toDate() || new Date(0);
+      
+      if (updateA.getTime() === updateB.getTime()) {
+        const completionA = a.completionDate?.toDate() || new Date(0);
+        const completionB = b.completionDate?.toDate() || new Date(0);
+        return completionB - completionA;
+      }
+      
+      return updateB - updateA;
     });
   };
 
@@ -323,7 +331,7 @@ export default function MainPage() {
 
     } catch (error) {
       console.error('프로젝트 복사 중 오류 발생:', error);
-      alert('프로젝트 복사 중 오류가 발생했습니다.');
+      alert('프로젝트 복�� 중 오류가 발생했습니다.');
     }
   };
 
@@ -375,6 +383,14 @@ export default function MainPage() {
     )
   }
 
+  // 날짜 포맷팅 함수 추가 (없다면)
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    const date = timestamp.toDate();
+    return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
+  };
+  
+
   return (
     <div className="min-h-screen bg-white dark:bg-gray-900">
       <Header />
@@ -383,8 +399,9 @@ export default function MainPage() {
           <div className="flex flex-col gap-16">
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* 타이틀 영역 - 3칸 차지 (왼쪽 패딩 제거) */}
-              <div className="lg:col-span-3 flex flex-col gap-2 pl-0">
-                <h2 className="flex flex-col sm:flex-row sm:items-center text-2xl font-bold text-gray-800 dark:text-gray-200">
+              <div className="lg:col-span-3 pl-0">
+                {/* 년/월 표시 */}
+                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
                   {yearFilter}년 {' '}
                   {selectedMonths.length === 1 
                     ? `${selectedMonths[0]}월`
@@ -394,31 +411,47 @@ export default function MainPage() {
                         ? '전체'
                         : `${selectedMonths.join(', ')}월`
                   }
-                  <span className="mt-2 sm:mt-0 sm:ml-2 text-lg sm:text-xl text-blue-500 dark:text-blue-400 font-semibold">
-                    ({selectedMonths.length === 1 
-                      ? `${selectedMonths[0]}월` 
-                      : selectedMonths.length === 0 
-                        ? `${currentMonth}월`
-                        : selectedMonths.length === 12
-                          ? '전체'
-                          : `${selectedMonths.join(', ')}월`} 공수 {calculateTotalEffort(filteredProjects)}m / {convertEffortToDay(calculateTotalEffort(filteredProjects))})
-                  </span>
                 </h2>
 
-                <h1 className="text-lg text-gray-700 dark:text-gray-300">
-                  전체 프로젝트 목록
-                  <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
-                    (총 {filteredProjects.length}개)
-                  </span>
-                </h1>
+                {/* 박스 컨테이너 */}
+                <div className="gap-4 max-w-2xl">
+                  {/* 작업 건수 박스 */}
+                  <div className="flex flex-col mn-box">
+                    <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-t-lg">
+                      <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
+                        월 작업 건수
+                      </span>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800">
+                      <span className="text-3xl font-bold text-amber-500 dark:text-amber-400">
+                        {filteredProjects.length}
+                      </span>
+                      <span className="ml-2 text-lg text-amber-500 dark:text-amber-400">건</span>
+                    </div>
+                  </div>
 
+                  {/* 월 공수 박스 */}
+                  <div className="flex flex-col mt-4 mn-box">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-t-lg ">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        월 공수 (M/M)
+                      </span>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800">
+                      <span className="text-3xl font-bold text-blue-500 dark:text-blue-400">
+                        {calculateTotalEffort(filteredProjects)}
+                      </span>
+                      <span className="ml-2 text-lg text-blue-500 dark:text-blue-400">m</span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {/* 필터 옵션 영역 - 1칸 차지 (오른쪽 패딩 제거) */}
               <div className="lg:col-span-1 pr-0">
                 <div className="flex flex-col gap-1.5 w-full">
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
                       필터 옵션
                     </h3>
                     <button
@@ -619,7 +652,7 @@ export default function MainPage() {
                 </div>
               </div>
 
-              {/* 버튼 영역 - 1칸 차지 (오른쪽 패딩 제거) */}
+              {/* 버튼 영역 - 1 차지 (오른쪽 패딩 제거) */}
               <div className="lg:col-span-1 grid grid-cols-2 gap-3 pr-0">
                 {isAdmin && (
                   <>
@@ -670,9 +703,9 @@ export default function MainPage() {
                     router.push(`/detail/${project.userId}/${project.id}`);
                   }
                 }}
-                className={`rounded-lg shadow-sm hover:shadow-md 
+                className={`mn-card-white rounded-lg shadow-sm hover:shadow-md 
                   transition-all duration-200 transform hover:-translate-y-1
-                  p-5 ${!isCopyMode && 'cursor-pointer'}
+                  p-4 ${!isCopyMode && 'cursor-pointer'}
                   ${project.status === '종료' 
                     ? `bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 
                        ${isCopyMode ? 'opacity-100' : 'opacity-60 dark:opacity-40 hover:opacity-90 dark:hover:opacity-70'}`
@@ -710,23 +743,12 @@ export default function MainPage() {
                   <div className="mt-auto">
                     <div className="mb-4 space-y-2">
                       <div className="text-sm flex items-center justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">현업요청:</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {project.requestDate?.toDate().toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div className="text-sm flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">TF요청일:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {project.startDate?.toDate().toLocaleDateString()}
                         </span>
                       </div>
-                      <div className="text-sm flex items-center justify-between">
-                        <span className="text-gray-500 dark:text-gray-400">완료예정일:</span>
-                        <span className="font-medium text-gray-900 dark:text-white">
-                          {project.endDate?.toDate().toLocaleDateString()}
-                        </span>
-                      </div>
+
                       <div className="text-sm flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">실 완료일:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
@@ -746,28 +768,42 @@ export default function MainPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-1.5">
+                    <div className="grid grid-cols-4 gap-1">
                       {project.planning.name && (
-                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 text-center">
-                          기획 {project.planning.name} {project.planning.effort}m
+                        <span className="block w-full px-1.5 py-0.5 text-[9px] rounded-full 
+                          bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200 
+                          text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                          기획{project.planning.effort}m
                         </span>
                       )}
                       {project.design.name && (
-                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 text-center">
-                          디자인 {project.design.name} {project.design.effort}m
+                        <span className="block w-full px-1.5 py-0.5 text-[9px] rounded-full 
+                          bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200 
+                          text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                          디자인{project.design.effort}m
                         </span>
                       )}
                       {project.publishing.name && (
-                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 text-center">
-                          퍼블 {project.publishing.name} {project.publishing.effort}m
+                        <span className="block w-full px-1.5 py-0.5 text-[9px] rounded-full 
+                          bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200 
+                          text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                          퍼블{project.publishing.effort}m
                         </span>
                       )}
                       {project.development.name && (
-                        <span className="block w-full px-2 py-1 text-xs rounded-full bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 text-center">
-                          개발 {project.development.name} {project.development.effort}m
+                        <span className="block w-full px-1.5 py-0.5 text-[9px] rounded-full 
+                          bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200 
+                          text-center whitespace-nowrap overflow-hidden text-ellipsis">
+                          개발{project.development.effort}m
                         </span>
                       )}
                     </div>
+
+                    {/* updateAt 시간 표시 */}
+                    <div className="text-[9.5px] text-gray-400 dark:text-gray-500 mt-2 text-right">
+                      수정: {formatDate(project.updateAt)}
+                    </div>
+
 
                     {isCopyMode && (
                       <div className="mt-4 flex justify-end">
