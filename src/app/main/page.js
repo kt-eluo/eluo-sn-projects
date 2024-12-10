@@ -723,26 +723,37 @@ export default function MainPage() {
 
                 {isAdmin && (
                   <div className="grid grid-cols-2 gap-3 w-full">
-                    <button className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
-                      hover:bg-blue-600 active:bg-blue-700
-                      transition-all duration-200
-                      flex items-center justify-center gap-2
-                      shadow-sm hover:shadow-md">
+                    <button 
+                      onClick={() => router.push('/new')}
+                      className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
+                        hover:bg-blue-600 active:bg-blue-700
+                        transition-all duration-200
+                        flex items-center justify-center gap-2
+                        shadow-sm hover:shadow-md">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
                       </svg>
                       프로젝트 추가
                     </button>
-                    <button className="px-4 py-2.5 text-sm font-medium rounded-lg
-                      transition-all duration-200
-                      flex items-center justify-center gap-2
-                      shadow-sm hover:shadow-md
-                      bg-green-500 hover:bg-green-600 active:bg-green-700 text-white">
+                    <button 
+                      onClick={() => {
+                        console.log("복사 모드 토글"); // 디버깅용
+                        setIsCopyMode(!isCopyMode);
+                      }}
+                      className={`px-4 py-2.5 text-sm font-medium rounded-lg
+                        transition-all duration-200
+                        flex items-center justify-center gap-2
+                        shadow-sm hover:shadow-md
+                        ${isCopyMode 
+                          ? 'bg-red-500 hover:bg-red-600 active:bg-red-700 text-white' 
+                          : 'bg-green-500 hover:bg-green-600 active:bg-green-700 text-white'
+                        }`}
+                    >
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
                         <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                         <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                       </svg>
-                      프로젝트 복사
+                      {isCopyMode ? '복사 취소' : '프로젝트 복사'}
                     </button>
                   </div>
                 )}
