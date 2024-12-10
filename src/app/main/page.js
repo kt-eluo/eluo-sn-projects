@@ -11,6 +11,29 @@ import "react-datepicker/dist/react-datepicker.css"
 import '@/styles/main.css'
 
 export default function MainPage() {
+  // 상태별 카운트를 계산하는 함수
+  const getStatusCounts = (projects) => {
+    return projects.reduce((counts, project) => {
+      const status = project.status || '대기';
+      counts[status] = (counts[status] || 0) + 1;
+      return counts;
+    }, {
+      '진행': 0,
+      '대기': 0,
+      '종료': 0
+    });
+  };
+
+  // 역할별 공수를 계산하는 함수
+  const calculateRoleEffort = (projects, role) => {
+    return projects.reduce((total, project) => {
+      if (project[role] && project[role].effort) {
+        return total + parseFloat(project[role].effort);
+      }
+      return total;
+    }, 0);
+  };
+
   const { user, loading } = useAuth()
   const router = useRouter()
   const { darkMode } = useTheme()
@@ -181,16 +204,48 @@ export default function MainPage() {
     });
   };
 
-  // 필터링된 프로젝트 계산
-  const filteredProjects = getFilteredProjects(projects);
-  
+  // 필터링된 프로젝트 계산 (상태 필터 제외)
+  const filteredProjectsForCounts = projects.filter(project => {
+    const completionDate = project.completionDate?.toDate();
+    if (!completionDate) return false;
+
+    const projectYear = completionDate.getFullYear().toString();
+    const projectMonth = completionDate.getMonth() + 1;
+
+    // 년도 및 월별 필터 적용
+    const yearMatch = yearFilter === projectYear;
+    const monthMatch = selectedMonths.length === 0 || selectedMonths.includes(projectMonth);
+
+    // 커스텀 날짜 범위 필터 적용
+    const dateRangeMatch = startDate && endDate
+      ? completionDate >= new Date(startDate) && completionDate <= new Date(endDate)
+      : true;
+
+    return yearMatch && monthMatch && dateRangeMatch;
+  });
+
+  // 상태 필터를 포함한 필터링된 프로젝트 계산
+  const filteredProjects = filteredProjectsForCounts.filter(project => 
+    statusFilter === '전체' || project.status === statusFilter
+  );
+
+  // 상태별 카운트 계산 (상태 필터 제외)
+  const statusCounts = getStatusCounts(filteredProjectsForCounts);
+
+  // 역할별 공수 계산 (상태 필터 제외)
+  const planningEffort = calculateRoleEffort(filteredProjectsForCounts, 'planning');
+  const designEffort = calculateRoleEffort(filteredProjectsForCounts, 'design');
+  const publishingEffort = calculateRoleEffort(filteredProjectsForCounts, 'publishing');
+  const developmentEffort = calculateRoleEffort(filteredProjectsForCounts, 'development');
+  const totalEffort = planningEffort + designEffort + publishingEffort + developmentEffort;
+
   // 페이지네이션 로직
   const indexOfLastProject = currentPage * projectsPerPage;
   const indexOfFirstProject = indexOfLastProject - projectsPerPage;
   const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
-  // 통합된 핸들러 ���
+  // 통합된 핸들러 
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
     setCurrentPage(1);
@@ -229,7 +284,7 @@ export default function MainPage() {
       return total + planningEffort + designEffort + publishingEffort
     }, 0)
 
-    // 소수점 3째자리에서 반올림하여 2째자리까지 표시
+    // ��수점 3째자리에서 반올림하여 2째자리까지 표시
     return Number(total.toFixed(2))
   }
 
@@ -375,27 +430,6 @@ export default function MainPage() {
     setIsAllMonthsSelected(false);
   }, []); // 빈 의존성 배열로 초기 로딩 시에만 실행
 
-  // 상태별 카운트 계산 함수 추가
-  const getStatusCounts = (projects) => {
-    return projects.reduce((acc, project) => {
-      acc[project.status] = (acc[project.status] || 0) + 1;
-      return acc;
-    }, {});
-  };
-
-  // 역할별 공수 계산 함수 추가
-  const calculateRoleEffort = (projects, role) => {
-    if (!Array.isArray(projects)) return 0;
-    
-    const total = projects.reduce((sum, project) => {
-      const effort = Number(project[role]?.effort || 0);
-      return sum + effort;
-    }, 0);
-    
-    return Number(total.toFixed(2));
-  };
-
-
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -445,7 +479,7 @@ export default function MainPage() {
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800 mn-big-tit">
                         <div className="flex items-center justify-center">
                           <div>
-                            <span className="text-6xl font-bold text-amber-500 dark:text-amber-400">8</span>
+                            <span className="text-6xl font-bold text-amber-500 dark:text-amber-400">{filteredProjectsForCounts.length}</span>
                             <span className="ml-2 text-lg text-amber-500 dark:text-amber-400">건</span>
                           </div>
                         </div>
@@ -459,15 +493,15 @@ export default function MainPage() {
                         <div className="space-y-2">
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600 dark:text-gray-400">진행</span>
-                            <span className="font-medium text-amber-500 dark:text-amber-400">7건</span>
+                            <span className="font-medium text-amber-500 dark:text-amber-400">{statusCounts['진행'] || 0}건</span>
                           </div>
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600 dark:text-gray-400">대기</span>
-                            <span className="font-medium text-amber-500 dark:text-amber-400">0건</span>
+                            <span className="font-medium text-amber-500 dark:text-amber-400">{statusCounts['대기'] || 0}건</span>
                           </div>
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600 dark:text-gray-400">종료</span>
-                            <span className="font-medium text-amber-500 dark:text-amber-400">1건</span>
+                            <span className="font-medium text-amber-500 dark:text-amber-400">{statusCounts['종료'] || 0}건</span>
                           </div>
                         </div>
                       </div>
@@ -481,36 +515,36 @@ export default function MainPage() {
                         <span className="text-sm font-medium text-blue-900 dark:text-blue-100">월 공수 (M/M)</span>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800 mn-big-tit">
-                        <span className="text-6xl font-bold text-blue-500 dark:text-blue-400">3.09</span>
+                        <span className="text-6xl font-bold text-blue-500 dark:text-blue-400">{totalEffort.toFixed(2)}</span>
                         <span className="ml-2 text-lg text-blue-500 dark:text-blue-400">m</span>
                       </div>
                     </div>
                     <div className="flex flex-col mn-box mn-blue-box mn-blue-sub">
                       <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
-                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">12월 실 공수</span>
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">{selectedMonths.length === 1 ? `${selectedMonths[0]}월` : '전체'} 실 공수</span>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800">
                         <div className="space-y-2">
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600 dark:text-gray-400">기획 공수</span>
-                            <span className="font-medium text-blue-500 dark:text-blue-400">0.78m</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">{planningEffort.toFixed(2)}m</span>
                           </div>
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600 dark:text-gray-400">디자인 공수</span>
-                            <span className="font-medium text-blue-500 dark:text-blue-400">1.36m</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">{designEffort.toFixed(2)}m</span>
                           </div>
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600 dark:text-gray-400">퍼블 공수</span>
-                            <span className="font-medium text-blue-500 dark:text-blue-400">0.95m</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">{publishingEffort.toFixed(2)}m</span>
                           </div>
                           <div className="flex justify-between items-center text-sm">
                             <span className="text-gray-600 dark:text-gray-400">개발 공수</span>
-                            <span className="font-medium text-blue-500 dark:text-blue-400">0m</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">{developmentEffort.toFixed(2)}m</span>
                           </div>
                           <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
                             <div className="flex justify-between items-center">
                               <span className="font-medium text-gray-700 dark:text-gray-300">Total:</span>
-                              <span className="text-lg font-bold text-blue-500 dark:text-blue-400">3.09m</span>
+                              <span className="text-lg font-bold text-blue-500 dark:text-blue-400">{totalEffort.toFixed(2)}m</span>
                             </div>
                           </div>
                         </div>

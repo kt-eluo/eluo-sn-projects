@@ -49,7 +49,16 @@ export function Header() {
       <div className="max-w-8xl mx-auto w-full px-4 sm:px-6 md:px-8 lg:px-0">
         <div className="flex justify-between items-center h-16 w-full">
           {/* 로고 영역 */}
-          <div className="flex-shrink-0 cursor-pointer">
+          <div 
+            className="flex-shrink-0 cursor-pointer"
+            onClick={() => {
+              if (user) {
+                router.push('/main')
+              } else {
+                router.push('/login')
+              }
+            }}
+          >
             <Image
               src={darkMode ? LogoWhite : LogoBlack}
               alt="Company Logo"
