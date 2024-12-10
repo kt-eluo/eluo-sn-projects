@@ -843,8 +843,8 @@ export default function MainPage() {
             <div className="text-center py-12">
               <p className="text-gray-500 dark:text-gray-400">
                 {statusFilter === '전체' && periodFilter === '전체' 
-                  ? '등록된 로젝트 없습니다.' 
-                  : '선택한 필터에 해당하는 로트 없습다.'}
+                  ? '등록된 프로젝트가 없습니다.' 
+                  : '선택한 필터에 해당하는 프로젝트가 없습니다.'}
               </p>
             </div>
           )}
