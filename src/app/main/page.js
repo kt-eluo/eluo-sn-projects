@@ -70,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 용자의 프로젝트를 져오기  users 컬렉션을 먼저 조회
+      // 모든 사용자의 프로젝트를 가져오기  users 컬렉션을 먼저 조회
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -190,7 +190,7 @@ export default function MainPage() {
   const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
-  // 통합된 핸들러 함수들
+  // 통합된 핸들러 함수
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
     setCurrentPage(1);
@@ -331,7 +331,7 @@ export default function MainPage() {
 
     } catch (error) {
       console.error('프로젝트 복사 중 오류 발생:', error);
-      alert('프로젝트 복�� 중 오류가 발생했습니다.');
+      alert('프로젝트 복사 중 오류가 발생했습니다.');
     }
   };
 
@@ -375,6 +375,27 @@ export default function MainPage() {
     setIsAllMonthsSelected(false);
   }, []); // 빈 의존성 배열로 초기 로딩 시에만 실행
 
+  // 상태별 카운트 계산 함수 추가
+  const getStatusCounts = (projects) => {
+    return projects.reduce((acc, project) => {
+      acc[project.status] = (acc[project.status] || 0) + 1;
+      return acc;
+    }, {});
+  };
+
+  // 역할별 공수 계산 함수 추가
+  const calculateRoleEffort = (projects, role) => {
+    if (!Array.isArray(projects)) return 0;
+    
+    const total = projects.reduce((sum, project) => {
+      const effort = Number(project[role]?.effort || 0);
+      return sum + effort;
+    }, 0);
+    
+    return Number(total.toFixed(2));
+  };
+
+
   if (loading || isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -414,36 +435,135 @@ export default function MainPage() {
                 </h2>
 
                 {/* 박스 컨테이너 */}
-                <div className="gap-4 max-w-2xl">
+                
+                <div className="gap-4 flex flex-wrap items-center">
                   {/* 작업 건수 박스 */}
-                  <div className="flex flex-col mn-box">
-                    <div className="bg-amber-100 dark:bg-amber-900/30 p-3 rounded-t-lg">
+
+
+
+
+
+                  <div className="flex flex-col mn-box mn-orange-box mn-orange-tit">
+                    <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
                       <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
                         월 작업 건수
                       </span>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800">
-                      <span className="text-3xl font-bold text-amber-500 dark:text-amber-400">
-                        {filteredProjects.length}
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800 mn-big-tit">
+                      <div className="flex items-center justify-center">
+                        <div>
+                          <span className="text-6xl font-bold text-amber-500 dark:text-amber-400">
+                            {filteredProjects.length}
+                          </span>
+                          <span className="ml-2 text-lg text-amber-500 dark:text-amber-400">건</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex flex-col mn-box mn-orange-box mn-orange-sub">
+                    <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        작업 건수
                       </span>
-                      <span className="ml-2 text-lg text-amber-500 dark:text-amber-400">건</span>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">진행</span>
+                          <span className="font-medium text-amber-500 dark:text-amber-400">
+                            {getStatusCounts(filteredProjects)['진행'] || 0}건
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">대기</span>
+                          <span className="font-medium text-amber-500 dark:text-amber-400">
+                            {getStatusCounts(filteredProjects)['대기'] || 0}건
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">종료</span>
+                          <span className="font-medium text-amber-500 dark:text-amber-400">
+                            {getStatusCounts(filteredProjects)['종료'] || 0}건
+                          </span>
+                        </div>
+                      </div>
                     </div>
                   </div>
 
+
+
                   {/* 월 공수 박스 */}
-                  <div className="flex flex-col mt-4 mn-box">
-                    <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-t-lg ">
+                  <div className="flex flex-col mn-box mn-blue-box mn-blue-tit">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg ">
                       <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
                         월 공수 (M/M)
                       </span>
                     </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800">
-                      <span className="text-3xl font-bold text-blue-500 dark:text-blue-400">
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800 mn-big-tit">
+                      <span className="text-6xl font-bold text-blue-500 dark:text-blue-400">
                         {calculateTotalEffort(filteredProjects)}
                       </span>
                       <span className="ml-2 text-lg text-blue-500 dark:text-blue-400">m</span>
                     </div>
                   </div>
+
+                  {/* 월 공수 상세 박스 */}
+                  <div className="flex flex-col mn-box mn-blue-box mn-blue-sub">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
+                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                        {selectedMonths.length === 1 
+                          ? `${selectedMonths[0]}월`
+                          : selectedMonths.length === 0 
+                            ? `${currentMonth}월`
+                            : selectedMonths.length === 12
+                              ? '전체'
+                              : `${selectedMonths.join(', ')}월`
+                        } 실 공수
+                      </span>
+                    </div>
+                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800">
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">기획 공수</span>
+                          <span className="font-medium text-blue-500 dark:text-blue-400">
+                            {calculateRoleEffort(filteredProjects, 'planning')}m
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">디자인 공수</span>
+                          <span className="font-medium text-blue-500 dark:text-blue-400">
+                            {calculateRoleEffort(filteredProjects, 'design')}m
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">퍼블 공수</span>
+                          <span className="font-medium text-blue-500 dark:text-blue-400">
+                            {calculateRoleEffort(filteredProjects, 'publishing')}m
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center text-sm">
+                          <span className="text-gray-600 dark:text-gray-400">개발 공수</span>
+                          <span className="font-medium text-blue-500 dark:text-blue-400">
+                            {calculateRoleEffort(filteredProjects, 'development')}m
+                          </span>
+                        </div>
+                        <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
+                          <div className="flex justify-between items-center">
+                            <span className="font-medium text-gray-700 dark:text-gray-300">Total:</span>
+                            <span className="text-lg font-bold text-blue-500 dark:text-blue-400">
+                              {(
+                                calculateRoleEffort(filteredProjects, 'planning') +
+                                calculateRoleEffort(filteredProjects, 'design') +
+                                calculateRoleEffort(filteredProjects, 'publishing') +
+                                calculateRoleEffort(filteredProjects, 'development')
+                              ).toFixed(2)}m
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </div>
 
@@ -451,30 +571,9 @@ export default function MainPage() {
               <div className="lg:col-span-1 pr-0">
                 <div className="flex flex-col gap-1.5 w-full">
                   <div className="flex justify-between items-center mb-2">
-                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+                    <h3 className="text-2xl font-bold text-gray-800 dark:text-gray-200">
                       필터 옵션
                     </h3>
-                    <button
-                      onClick={handleResetFilters}
-                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md
-                        bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 
-                        hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors
-                        focus:outline-none focus:ring-2 focus:ring-gray-400"
-                    >
-                      <svg 
-                        xmlns="http://www.w3.org/2000/svg" 
-                        className="h-3.5 w-3.5" 
-                        viewBox="0 0 20 20" 
-                        fill="currentColor"
-                      >
-                        <path 
-                          fillRule="evenodd" 
-                          d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v4a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" 
-                          clipRule="evenodd" 
-                        />
-                      </svg>
-                      필터 초기화
-                    </button>
                   </div>
 
                   <div className="flex flex-col gap-1.5 w-full">
@@ -625,38 +724,52 @@ export default function MainPage() {
                     </div>
                   </div>
                 </div>
-              </div>
-            </div>
+                <button
+                      onClick={handleResetFilters}
+                      className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md
+                        bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 
+                        hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors
+                        focus:outline-none focus:ring-2 focus:ring-gray-400 filterBtn"
+                    >
+                      <svg 
+                        xmlns="http://www.w3.org/2000/svg" 
+                        className="h-3.5 w-3.5" 
+                        viewBox="0 0 20 20" 
+                        fill="currentColor"
+                      >
+                        <path 
+                          fillRule="evenodd" 
+                          d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v4a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" 
+                          clipRule="evenodd" 
+                        />
+                      </svg>
+                      필터 초기화
+                    </button>
 
-            {/* 검색 및 버튼 영역 */}
-            <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-              {/* 검색창 영역 - 3칸 차지 (왼쪽 패딩 제거) */}
-              <div className="lg:col-span-3 relative pl-0">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="프로젝트 검색..."
-                  className="w-full px-4 py-2.5 pr-10 text-sm rounded-lg
-                    bg-white dark:bg-gray-700 
-                    border border-gray-300 dark:border-gray-600
-                    text-gray-900 dark:text-white
-                    placeholder-gray-500 dark:placeholder-gray-400
-                    focus:ring-2 focus:ring-blue-500 focus:border-blue-500
-                    shadow-sm hover:shadow transition-all duration-200"
-                />
-                <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                  <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                  </svg>
+                <div className="border-t border-gray-200 dark:border-gray-700 my-4"></div>
+
+                <div className="relative w-full mb-3">
+                  <input
+                    type="text"
+                    placeholder="프로젝트 검색..."
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full px-4 py-2.5 pr-10 text-sm rounded-lg
+                      bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600
+                      text-gray-900 dark:text-white
+                      placeholder-gray-500 dark:placeholder-gray-400
+                      focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                      shadow-sm hover:shadow transition-all duration-200"
+                  />
+                  <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                    <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
+                    </svg>
+                  </div>
                 </div>
-              </div>
 
-              {/* 버튼 영역 - 1 차지 (오른쪽 패딩 제거) */}
-              <div className="lg:col-span-1 grid grid-cols-2 gap-3 pr-0">
-                {isAdmin && (
-                  <>
-                    <button 
+                <div className="grid grid-cols-2 gap-3 w-full">
+                <button 
                       onClick={() => router.push('/new')}
                       className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
                         hover:bg-blue-600 active:bg-blue-700
@@ -688,13 +801,13 @@ export default function MainPage() {
                       </svg>
                       {isCopyMode ? '복사 취소' : '프로젝트 복사'}
                     </button>
-                  </>
-                )}
+                </div>
               </div>
             </div>
+
           </div>
 
-          <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          <div className="mt-20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
             {currentProjects.map((project, index) => (
               <div
                 key={`${project.id}-${index}`}

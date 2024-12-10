@@ -657,7 +657,7 @@ export default function DetailContent({ userId, projectId }) {
                 ) : (
                   <div className="flex flex-col space-y-1">
                     <span className="text-blue-600 dark:text-blue-400 font-medium">
-                      {project.planning.name || '��정'}
+                      {project.planning.name || '수정'}
                     </span>
                     {project.planning.effort && (
                       <span className="text-sm text-gray-500 dark:text-gray-400">
