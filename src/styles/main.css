@@ -23,55 +23,48 @@
   .mn-box .rounded-b-lg {height: 11rem; display: flex; justify-content: space-between; align-items: center;}
   .mn-box .space-y-2 {width: 100%;}
   .mn-box .justify-between span {display: block; width: fit-content;}
-  .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 42.3rem;}
+
   .mn-card-white {background-color: rgb(243, 244, 246);}
   .mn-big-tit {justify-content: center !important;}
 
   .text-6xl {font-size: 4rem; line-height: 3rem;}
   .filterBtn {margin: 10px 0 0 auto;}
-
+  .top-flex-box {justify-content: space-between;}
 
 
 
   /* 모바일 우선 (Mobile First) 스타일 */
 /* 기본 스타일 (0px ~ 639px) */
-.example {
-  /* 기본 스타일 */
-}
-
+.mn-box {width: 48%;}
 /* Small devices (sm) */
 @media (min-width: 640px) {
-  .example {
-    /* sm 스타일 */
-  }
+  .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 48%;}
+  .mn-orange-sub, .mn-blue-sub {width: 48%;}
+  .mn-box .rounded-b-lg {height: 11rem;}
 }
 
 /* Medium devices (md) */
 @media (min-width: 768px) {
-  .example {
-    /* md 스타일 */
-  }
+  .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 49%;}
+  .mn-orange-sub, .mn-blue-sub {width: 49%;}
 }
 
 /* Large devices (lg) */
 @media (min-width: 1024px) {
-  .example {
-    /* lg 스타일 */
-  }
+  .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 70%;}
+  .mn-orange-sub, .mn-blue-sub {width: 28%;}
 }
 
 /* Extra large devices (xl) */
 @media (min-width: 1280px) {
-  .example {
-    /* xl 스타일 */
-  }
+  .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 78%;}
+  .mn-orange-sub, .mn-blue-sub {width: 20%;}
 }
 
 /* 2Extra large devices (2xl) */
 @media (min-width: 1536px) {
-  .example {
-    /* 2xl 스타일 */
-  }
+  .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 78%;}
+  .mn-orange-sub, .mn-blue-sub {width: 20%;}
 }
 
 

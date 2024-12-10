@@ -190,7 +190,7 @@ export default function MainPage() {
   const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
-  // 통합된 핸들러 함수
+  // 통합된 핸들러 수
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
     setCurrentPage(1);
@@ -435,135 +435,88 @@ export default function MainPage() {
                 </h2>
 
                 {/* 박스 컨테이너 */}
-                
-                <div className="gap-4 flex flex-wrap items-center">
-                  {/* 작업 건수 박스 */}
-
-
-
-
-
-                  <div className="flex flex-col mn-box mn-orange-box mn-orange-tit">
-                    <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
-                      <span className="text-sm font-medium text-amber-900 dark:text-amber-100">
-                        월 작업 건수
-                      </span>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800 mn-big-tit">
-                      <div className="flex items-center justify-center">
-                        <div>
-                          <span className="text-6xl font-bold text-amber-500 dark:text-amber-400">
-                            {filteredProjects.length}
-                          </span>
-                          <span className="ml-2 text-lg text-amber-500 dark:text-amber-400">건</span>
+                <div className="gap-4 flex flex-col">
+                  {/* 월 작업 건수와 작업 건수 묶음 */}
+                  <div className="flex top-flex-box">
+                    <div className="flex flex-col mn-box mn-orange-box mn-orange-tit">
+                      <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
+                        <span className="text-sm font-medium text-amber-900 dark:text-amber-100">월 작업 건수</span>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800 mn-big-tit">
+                        <div className="flex items-center justify-center">
+                          <div>
+                            <span className="text-6xl font-bold text-amber-500 dark:text-amber-400">8</span>
+                            <span className="ml-2 text-lg text-amber-500 dark:text-amber-400">건</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                  <div className="flex flex-col mn-box mn-orange-box mn-orange-sub">
-                    <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
-                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        작업 건수
-                      </span>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">진행</span>
-                          <span className="font-medium text-amber-500 dark:text-amber-400">
-                            {getStatusCounts(filteredProjects)['진행'] || 0}건
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">대기</span>
-                          <span className="font-medium text-amber-500 dark:text-amber-400">
-                            {getStatusCounts(filteredProjects)['대기'] || 0}건
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">종료</span>
-                          <span className="font-medium text-amber-500 dark:text-amber-400">
-                            {getStatusCounts(filteredProjects)['종료'] || 0}건
-                          </span>
-                        </div>
+                    <div className="flex flex-col mn-box mn-orange-box mn-orange-sub">
+                      <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">작업 건수</span>
                       </div>
-                    </div>
-                  </div>
-
-
-
-                  {/* 월 공수 박스 */}
-                  <div className="flex flex-col mn-box mn-blue-box mn-blue-tit">
-                    <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg ">
-                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        월 공수 (M/M)
-                      </span>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800 mn-big-tit">
-                      <span className="text-6xl font-bold text-blue-500 dark:text-blue-400">
-                        {calculateTotalEffort(filteredProjects)}
-                      </span>
-                      <span className="ml-2 text-lg text-blue-500 dark:text-blue-400">m</span>
-                    </div>
-                  </div>
-
-                  {/* 월 공수 상세 박스 */}
-                  <div className="flex flex-col mn-box mn-blue-box mn-blue-sub">
-                    <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
-                      <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
-                        {selectedMonths.length === 1 
-                          ? `${selectedMonths[0]}월`
-                          : selectedMonths.length === 0 
-                            ? `${currentMonth}월`
-                            : selectedMonths.length === 12
-                              ? '전체'
-                              : `${selectedMonths.join(', ')}월`
-                        } 실 공수
-                      </span>
-                    </div>
-                    <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800">
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">기획 공수</span>
-                          <span className="font-medium text-blue-500 dark:text-blue-400">
-                            {calculateRoleEffort(filteredProjects, 'planning')}m
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">디자인 공수</span>
-                          <span className="font-medium text-blue-500 dark:text-blue-400">
-                            {calculateRoleEffort(filteredProjects, 'design')}m
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">퍼블 공수</span>
-                          <span className="font-medium text-blue-500 dark:text-blue-400">
-                            {calculateRoleEffort(filteredProjects, 'publishing')}m
-                          </span>
-                        </div>
-                        <div className="flex justify-between items-center text-sm">
-                          <span className="text-gray-600 dark:text-gray-400">개발 공수</span>
-                          <span className="font-medium text-blue-500 dark:text-blue-400">
-                            {calculateRoleEffort(filteredProjects, 'development')}m
-                          </span>
-                        </div>
-                        <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
-                          <div className="flex justify-between items-center">
-                            <span className="font-medium text-gray-700 dark:text-gray-300">Total:</span>
-                            <span className="text-lg font-bold text-blue-500 dark:text-blue-400">
-                              {(
-                                calculateRoleEffort(filteredProjects, 'planning') +
-                                calculateRoleEffort(filteredProjects, 'design') +
-                                calculateRoleEffort(filteredProjects, 'publishing') +
-                                calculateRoleEffort(filteredProjects, 'development')
-                              ).toFixed(2)}m
-                            </span>
+                      <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">진행</span>
+                            <span className="font-medium text-amber-500 dark:text-amber-400">7건</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">대기</span>
+                            <span className="font-medium text-amber-500 dark:text-amber-400">0건</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">종료</span>
+                            <span className="font-medium text-amber-500 dark:text-amber-400">1건</span>
                           </div>
                         </div>
                       </div>
                     </div>
                   </div>
 
+                  {/* 월 공수 (M/M)와 ~ 월 실 공수 묶음 */}
+                  <div className="flex top-flex-box">
+                    <div className="flex flex-col mn-box mn-blue-box mn-blue-tit">
+                      <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">월 공수 (M/M)</span>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800 mn-big-tit">
+                        <span className="text-6xl font-bold text-blue-500 dark:text-blue-400">3.09</span>
+                        <span className="ml-2 text-lg text-blue-500 dark:text-blue-400">m</span>
+                      </div>
+                    </div>
+                    <div className="flex flex-col mn-box mn-blue-box mn-blue-sub">
+                      <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
+                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">12월 실 공수</span>
+                      </div>
+                      <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800">
+                        <div className="space-y-2">
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">기획 공수</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">0.78m</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">디자인 공수</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">1.36m</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">퍼블 공수</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">0.95m</span>
+                          </div>
+                          <div className="flex justify-between items-center text-sm">
+                            <span className="text-gray-600 dark:text-gray-400">개발 공수</span>
+                            <span className="font-medium text-blue-500 dark:text-blue-400">0m</span>
+                          </div>
+                          <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div className="flex justify-between items-center">
+                              <span className="font-medium text-gray-700 dark:text-gray-300">Total:</span>
+                              <span className="text-lg font-bold text-blue-500 dark:text-blue-400">3.09m</span>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
 
