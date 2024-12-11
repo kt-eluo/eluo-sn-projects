@@ -647,9 +647,9 @@ export default function DetailContent({ userId, projectId }) {
                       />
                     )}
                   </div>
-                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                     <div 
-                      className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
                       style={{ width: `${isEditing ? editedProject.progress || 0 : project.progress || 0}%` }}
                     ></div>
                   </div>
