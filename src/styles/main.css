@@ -32,10 +32,13 @@
 
 
 
-  /* 모바일 우선 (Mobile First) 스타일 */
+/* 모바일 우선 (Mobile First) 스타일 */
 /* 기본 스타일 (0px ~ 639px) */
 .mn-box {width: 49%;}
 .text-6xl {font-size: 3rem; line-height: 3rem;}
+
+/* 프로젝트 버튼 */
+.projectbtns {position: fixed; bottom: 0; left: 0; width: 100%; z-index: 5; padding: 10px;}
 
 /* Small devices (sm) */
 @media (min-width: 640px) {
@@ -57,6 +60,7 @@
   .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 70%;}
   .mn-orange-sub, .mn-blue-sub {width: 28%;}
   .text-6xl {font-size: 4rem; line-height: 3rem;}
+  .projectbtns {position: initial; padding: 0;}
 }
 
 /* Extra large devices (xl) */
@@ -64,6 +68,7 @@
   .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 66.2%;}
   .mn-orange-sub, .mn-blue-sub {width: 32.3%;}
   .text-6xl {font-size: 4rem; line-height: 3rem;}
+  .projectbtns {position: initial; padding: 0;}
 }
 
 /* 2Extra large devices (2xl) */
@@ -71,6 +76,7 @@
   .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 66.2%;}
   .mn-orange-sub, .mn-blue-sub {width: 32.3%;}
   .text-6xl {font-size: 4rem; line-height: 3rem;}
+  .projectbtns {position: initial; padding: 0;}
 }
 
 

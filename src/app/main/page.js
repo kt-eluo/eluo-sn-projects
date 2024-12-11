@@ -422,15 +422,18 @@ export default function MainPage() {
               {/* 타이틀 영역 - 3칸 차지 (왼쪽 패딩 제거) */}
               <div className="lg:col-span-3 pl-0">
                 {/* 년/월 표시 */}
-                <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
-                  {yearFilter}년 {' '}
-                  {selectedMonths.length === 1 
-                    ? `${selectedMonths[0]}월`
-                    : selectedMonths.length === 0 
-                      ? `${currentMonth}월`
-                      : selectedMonths.length === 12
-                        ? '전체'
-                        : `${selectedMonths.join(', ')}월`
+                  <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-200 mb-4">
+                  {startDate && endDate 
+                    ? `${startDate.getFullYear()}년 ${startDate.getMonth() + 1}월 ${startDate.getDate()}일 ~ ${endDate.getFullYear()}년 ${endDate.getMonth() + 1}월 ${endDate.getDate()}일`
+                    : `${yearFilter}년 ${
+                        selectedMonths.length === 1 
+                          ? `${selectedMonths[0]}월`
+                          : selectedMonths.length === 0 
+                            ? `${currentMonth}월`
+                            : selectedMonths.length === 12
+                              ? '전체'
+                              : `${selectedMonths.join(', ')}월`
+                      }`
                   }
                 </h2>
 
@@ -439,7 +442,7 @@ export default function MainPage() {
                   <div className="flex top-flex-box">
                     <div className="flex flex-col mn-box mn-orange-box mn-orange-tit">
                       <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
-                        <span className="text-sm font-medium text-amber-900 dark:text-amber-100">월 작업 건수</span>
+                        <span className="text-sm font-semibold text-amber-900 dark:text-amber-100">월 작업 건수</span>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800 mn-big-tit">
                         <div className="flex items-center justify-center">
@@ -452,7 +455,7 @@ export default function MainPage() {
                     </div>
                     <div className="flex flex-col mn-box mn-orange-box mn-orange-sub">
                       <div className="bg-amber-100 dark:bg-amber-900/30 p-1 rounded-t-lg">
-                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">작업 건수</span>
+                        <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">작업 건수</span>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-amber-200 dark:border-amber-800">
                         <div className="space-y-2">
@@ -489,7 +492,7 @@ export default function MainPage() {
                   <div className="flex top-flex-box mt-4">
                     <div className="flex flex-col mn-box mn-blue-box mn-blue-tit">
                       <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
-                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">월 공수 (M/M)</span>
+                        <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">월 공수 (M/M)</span>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800 mn-big-tit">
                         <span className="text-6xl font-bold text-blue-500 dark:text-blue-400">{calculateTotalEffort(filteredProjects)}</span>
@@ -498,7 +501,7 @@ export default function MainPage() {
                     </div>
                     <div className="flex flex-col mn-box mn-blue-box mn-blue-sub">
                       <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
-                        <span className="text-sm font-medium text-blue-900 dark:text-blue-100">{selectedMonths.length === 1 ? `${selectedMonths[0]}월` : '전체'} 실 공수</span>
+                        <span className="text-sm font-semibold text-blue-900 dark:text-blue-100">{selectedMonths.length === 1 ? `${selectedMonths[0]}월` : '전체'} 실 공수</span>
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800">
                         <div className="space-y-2">
@@ -719,6 +722,7 @@ export default function MainPage() {
                 <div className="relative w-full mb-3">
                   <input
                     type="text"
+                    value={searchTerm}
                     placeholder="프로젝트 검색..."
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full px-4 py-2.5 pr-10 text-sm rounded-lg
@@ -729,6 +733,18 @@ export default function MainPage() {
                       focus:ring-2 focus:ring-blue-500 focus:border-blue-500
                       shadow-sm hover:shadow transition-all duration-200"
                   />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm('')}
+                      className="absolute right-8 inset-y-0 flex items-center pr-2
+                        text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300
+                        transition-colors duration-200"
+                    >
+                      <svg className="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  )}
                   <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                     <svg className="h-5 w-5 text-gray-400 dark:text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -736,10 +752,10 @@ export default function MainPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 w-full">
+                <div className="grid grid-cols-2 gap-3 w-full projectbtns">
                 <button 
                       onClick={() => router.push('/new')}
-                      className="px-4 py-2.5 text-sm font-medium bg-blue-500 text-white rounded-lg
+                      className="px-4 py-2.5 text-[12px] font-semibold bg-blue-500 text-white rounded-lg
                         hover:bg-blue-600 active:bg-blue-700
                         transition-all duration-200
                         flex items-center justify-center gap-2
@@ -754,7 +770,7 @@ export default function MainPage() {
                         console.log("복사 모드 토글"); // 디버깅용
                         setIsCopyMode(!isCopyMode);
                       }}
-                      className={`px-4 py-2.5 text-sm font-medium rounded-lg
+                      className={`px-4 py-2.5 text-[12px] font-semibold rounded-lg
                         transition-all duration-200
                         flex items-center justify-center gap-2
                         shadow-sm hover:shadow-md

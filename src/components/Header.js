@@ -74,7 +74,7 @@ export function Header() {
             {/* 다크모드 토글 버튼 */}
             <button
               onClick={toggleTheme}
-              className="fixed bottom-8 right-8 
+              className="fixed bottom-14 right-4 
                 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full
                 transition-all duration-500 ease-in-out
                 bg-gray-200 dark:bg-gray-700 

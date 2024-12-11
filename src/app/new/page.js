@@ -245,13 +245,19 @@ export default function Page() {
                 </div>
                 
                 <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                  <div className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-1">실 완료일</div>
+                  <div className="text-sm font-medium text-red-500 dark:text-red-400 mb-1">
+                    실 완료일<span className="text-red-500">*</span>
+                  </div>
                   <input
                     type="date"
                     value={formatDate(newProject.completionDate)}
                     onChange={(e) => setNewProject({...newProject, completionDate: e.target.value ? new Date(e.target.value) : null})}
                     className="w-full px-3 py-1.5 text-sm rounded-lg bg-white dark:bg-gray-700 
-                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white
+                      focus:ring-2 focus:ring-red-500 focus:border-red-500
+                      required:border-red-500"
+                    required
+                    aria-required="true"
                   />
                 </div>
                 
@@ -266,7 +272,7 @@ export default function Page() {
               {/* 작업구분 섹션 */}
               <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4 mb-6">
                 <h3 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">작업구분</h3>
-                <div className="grid grid-cols-4 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {/* 채널 */}
                   <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg p-3">
                     <h4 className="text-[11px] font-medium text-blue-900 dark:text-blue-100 mb-1.5">채널</h4>
@@ -360,7 +366,7 @@ export default function Page() {
                           focus:ring-2 focus:ring-blue-500"
                       />
                     </div>
-                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div 
                         className="bg-blue-500 h-3 rounded-full transition-all duration-300"
                         style={{ width: `${newProject.progress || 0}%` }}
