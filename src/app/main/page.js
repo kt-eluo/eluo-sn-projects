@@ -777,7 +777,7 @@ export default function MainPage() {
 
 
           <h1 className="mt-20 text-[12px] text-gray-700 dark:text-gray-300 text-right">
-            전체 프로젝트 목록
+            프로젝트 목록
             <span className="ml-2 text-[12x] text-gray-500 dark:text-gray-400">
               (총 {filteredProjects.length}개)
             </span>
