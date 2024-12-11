@@ -752,8 +752,9 @@ export default function MainPage() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-3 w-full projectbtns">
-                <button 
+                {isAdmin && (
+                  <div className="grid grid-cols-2 gap-3 w-full projectbtns">
+                    <button 
                       onClick={() => router.push('/new')}
                       className="px-4 py-2.5 text-[12px] font-semibold bg-blue-500 text-white rounded-lg
                         hover:bg-blue-600 active:bg-blue-700
@@ -785,7 +786,8 @@ export default function MainPage() {
                       </svg>
                       {isCopyMode ? '복사 취소' : '프로젝트 복사'}
                     </button>
-                </div>
+                  </div>
+                )}
               </div>
             </div>
 
