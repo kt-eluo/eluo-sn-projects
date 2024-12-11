@@ -486,7 +486,7 @@ export default function MainPage() {
                   </div>
 
                   {/* 월 공수 (M/M)와 ~ 월 실 공수 묶음 */}
-                  <div className="flex top-flex-box">
+                  <div className="flex top-flex-box mt-4">
                     <div className="flex flex-col mn-box mn-blue-box mn-blue-tit">
                       <div className="bg-blue-100 dark:bg-blue-900/30 p-1 rounded-t-lg">
                         <span className="text-sm font-medium text-blue-900 dark:text-blue-100">월 공수 (M/M)</span>
@@ -794,7 +794,7 @@ export default function MainPage() {
                 }}
                 className={`mn-card-white rounded-lg shadow-sm hover:shadow-md 
                   transition-all duration-200 transform hover:-translate-y-1
-                  p-4 ${!isCopyMode && 'cursor-pointer'}
+                  p-3 ${!isCopyMode && 'cursor-pointer'}
                   ${project.status === '종료' 
                     ? `bg-gray-50 dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-700 
                        ${isCopyMode ? 'opacity-100' : 'opacity-60 dark:opacity-40 hover:opacity-90 dark:hover:opacity-70'}`
@@ -806,14 +806,21 @@ export default function MainPage() {
                   }`}
               >
                 <div className="h-full flex flex-col">
-                  <div className="mb-4">
-                    <div className="flex justify-between items-start mb-2">
-                      <h3 className={`text-lg sm:text-xl font-bold line-clamp-2
+                  <div>
+                    <div className="flex justify-between items-start">
+                      <h3 className={`text-md sm:text-md font-bold line-clamp-2
                         ${project.status === '종료' 
                           ? 'text-gray-500 dark:text-gray-500' 
                           : 'text-gray-900 dark:text-white'
-                        }`}
-                        style={{ wordBreak: 'keep-all' }}
+                        }
+                        h-[3rem] min-h-[3rem]`}
+                        style={{ 
+                          wordBreak: 'keep-all',
+                          display: '-webkit-box',
+                          WebkitLineClamp: '2',
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}
                       >
                         {project.title}
                       </h3>
@@ -828,7 +835,21 @@ export default function MainPage() {
                       </div>
                     </div>
                   </div>
-
+                  {/* 진행률 프로그레스 바 추가 */}
+                  <div className="mb-4 group relative">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[9.5px] font-medium text-gray-700 dark:text-gray-300 
+                        opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+                        {project.progress || 0}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700">
+                      <div 
+                        className="bg-blue-500 h-1 rounded-full transition-all duration-300"
+                        style={{ width: `${project.progress || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
                   <div className="mt-auto">
                     <div className="mb-4 space-y-2">
                       <div className="text-sm flex items-center justify-between">
@@ -856,6 +877,8 @@ export default function MainPage() {
                         </span>
                       </div>
                     </div>
+
+
 
                     <div className="grid grid-cols-4 gap-1">
                       {project.planning.name && (
