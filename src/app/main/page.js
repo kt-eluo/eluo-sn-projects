@@ -70,7 +70,7 @@ export default function MainPage() {
       const db = getFirestore();
       const allProjects = [];
       
-      // 모든 사용자의 프로젝트를 가져오기  users 컬렉션을 먼저 조회
+      // 모든 사용자의 프로젝트를 가져오기
       const usersRef = collection(db, 'users');
       const usersSnapshot = await getDocs(usersRef);
       
@@ -80,15 +80,19 @@ export default function MainPage() {
         const q = query(projectsRef, orderBy('createAt', 'desc'));
         const projectsSnapshot = await getDocs(q);
         
-        projectsSnapshot.forEach((doc) => {
-          const data = doc.data();
+        for (const projectDoc of projectsSnapshot.docs) {
+          const commentsRef = collection(db, 'projects', userDoc.id, 'userProjects', projectDoc.id, 'comments');
+          const commentsSnapshot = await getDocs(commentsRef);
+          
+          const projectData = projectDoc.data();
           allProjects.push({
-            id: doc.id,
-            userId: userDoc.id, // 프로젝트 소유자의 ID 저장
-            userEmail: userDoc.data().email, // 프로젝트 소유자의 이메일 저장
-            ...data
+            id: projectDoc.id,
+            userId: userDoc.id,
+            userEmail: userDoc.data().email,
+            ...projectData,
+            commentsCount: commentsSnapshot.size // 댓글 수 저장
           });
-        });
+        }
       }
 
       // 생성일 기준 내림차순 정렬
@@ -296,7 +300,7 @@ export default function MainPage() {
       const originalProjectRef = doc(db, 'projects', originalUserId, 'userProjects', projectId);
       const originalProjectSnap = await getDoc(originalProjectRef);
 
-      console.log("프로젝트 스냅샷:", originalProjectSnap.exists(), originalProjectSnap.data()); // 디버깅용
+      console.log("프로젝트 스냅샷:", originalProjectSna.exists(), originalProjectSnap.data()); // 디버깅용
 
       if (!originalProjectSnap.exists()) {
         console.error('프로젝트를 찾을 수 없음:', projectId);
@@ -842,14 +846,36 @@ export default function MainPage() {
                       >
                         {project.title}
                       </h3>
-                      <div className={`ml-2 px-2.5 py-1 text-[12px] rounded-full whitespace-nowrap
-                        ${project.status === '진행' 
-                          ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' 
-                          : project.status === '대기' 
-                            ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' 
-                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'}`}
-                      >
-                        {project.status}
+                      <div className="flex items-center gap-1.5">
+                        {/* 댓글 뱃지 - commentsCount가 0보다 큰 경우에만 표시 */}
+                        {project.commentsCount > 0 && (
+                          <div className="flex items-center gap-0.5 px-2 py-1 text-[11px] rounded-full 
+                            bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
+                            <svg 
+                              xmlns="http://www.w3.org/2000/svg" 
+                              className="h-3 w-3" 
+                              viewBox="0 0 20 20" 
+                              fill="currentColor"
+                            >
+                              <path 
+                                fillRule="evenodd" 
+                                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
+                                clipRule="evenodd"
+                              />
+                            </svg>
+                            {project.commentsCount}
+                          </div>
+                        )}
+                        {/* 기존 상태 뱃지 */}
+                        <div className={`px-2.5 py-1 text-[12px] rounded-full whitespace-nowrap
+                          ${project.status === '진행' 
+                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' 
+                            : project.status === '대기' 
+                              ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100' 
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-100'}`}
+                        >
+                          {project.status}
+                        </div>
                       </div>
                     </div>
                   </div>
