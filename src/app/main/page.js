@@ -824,7 +824,7 @@ export default function MainPage() {
                       >
                         {project.title}
                       </h3>
-                      <div className={`ml-2 px-2.5 py-1 text-xs sm:text-sm rounded-full whitespace-nowrap
+                      <div className={`ml-2 px-2.5 py-1 text-[12px] rounded-full whitespace-nowrap
                         ${project.status === '진행' 
                           ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100' 
                           : project.status === '대기' 
@@ -852,14 +852,14 @@ export default function MainPage() {
                   </div>
                   <div className="mt-auto">
                     <div className="mb-4 space-y-2">
-                      <div className="text-sm flex items-center justify-between">
+                      <div className="text-[12px] flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">TF요청일:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {project.startDate?.toDate().toLocaleDateString()}
                         </span>
                       </div>
 
-                      <div className="text-sm flex items-center justify-between">
+                      <div className="text-[12px] flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">실 완료일:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {project.completionDate?.toDate().toLocaleDateString() || '-'}
@@ -868,7 +868,7 @@ export default function MainPage() {
                     </div>
 
                     <div className="mb-3">
-                      <div className="text-sm flex items-center justify-between">
+                      <div className="text-[12px] flex items-center justify-between">
                         <span className="text-gray-500 dark:text-gray-400">전체 공수:</span>
                         <span className="font-medium text-gray-900 dark:text-white">
                           {`${Number(project.planning?.effort || 0) + 
@@ -921,7 +921,7 @@ export default function MainPage() {
                       <div className="mt-4 flex justify-end">
                         <button
                           onClick={(e) => handleCopyClick(e, project.id, project.userId)}
-                          className="px-4 py-2 text-sm bg-green-500 text-white rounded-md 
+                          className="px-4 py-2 text-[12px] bg-green-500 text-white rounded-md 
                             hover:bg-green-600 active:bg-green-700 
                             transition-colors duration-200 
                             flex items-center justify-center gap-2"
