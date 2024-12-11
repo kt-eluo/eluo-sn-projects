@@ -190,7 +190,7 @@ export default function MainPage() {
   const currentProjects = filteredProjects.slice(indexOfFirstProject, indexOfLastProject);
   const totalPages = Math.ceil(filteredProjects.length / projectsPerPage);
 
-  // 통합된 핸들러 ���
+  // 통합된 핸들러 
   const handleStatusFilterChange = (status) => {
     setStatusFilter(status);
     setCurrentPage(1);
@@ -471,12 +471,13 @@ export default function MainPage() {
                           <div className="pt-2 mt-2 border-t border-gray-200 dark:border-gray-700">
                             <div className="flex justify-between items-center">
                               <span className="font-medium text-gray-700 dark:text-gray-300">Total:</span>
-                              <span className="text-lg font-bold text-amber-500 dark:text-amber-400">{(
-                                calculateRoleEffort(filteredProjects, 'planning') +
-                                calculateRoleEffort(filteredProjects, 'design') +
-                                calculateRoleEffort(filteredProjects, 'publishing') +
-                                calculateRoleEffort(filteredProjects, 'development')
-                              ).toFixed(2)}m</span>
+                              <span className="text-lg font-bold text-amber-500 dark:text-amber-400">
+                                {(
+                                  (getStatusCounts(filteredProjects)['진행'] || 0) +
+                                  (getStatusCounts(filteredProjects)['대기'] || 0) +
+                                  (getStatusCounts(filteredProjects)['종료'] || 0)
+                                )}건
+                              </span>
                             </div>
                           </div>                          
                         </div>
