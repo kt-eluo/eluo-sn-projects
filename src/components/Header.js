@@ -113,10 +113,10 @@ export function Header() {
                   onClick={handleLogout}
                   className="px-2 sm:px-3 md:px-4 py-1 rounded-lg 
                     bg-red-500 hover:bg-red-600 
-                    text-white text-xs sm:text-sm
+                    text-white
                     transition-all duration-200 ease-in-out
                     transform hover:scale-105
-                    whitespace-nowrap"
+                    whitespace-nowrap text-[12px]"
                 >
                   로그아웃
                 </button>
@@ -126,7 +126,7 @@ export function Header() {
                 onClick={() => router.push('/login')}
                 className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg 
                   bg-blue-500 hover:bg-blue-600 
-                  text-white text-sm
+                  text-white text-[12px]
                   transition-all duration-200 ease-in-out
                   transform hover:scale-105"
               >

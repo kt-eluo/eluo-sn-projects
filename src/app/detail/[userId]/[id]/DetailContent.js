@@ -391,19 +391,20 @@ export default function DetailContent({ userId, projectId }) {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       <Header />
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* 메인 텐츠 카드 */}
+        {/* 메인 컨텐츠 카드 */}
         <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden">
           {/* 프로젝트 헤더 */}
           <div className="px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-800 dark:to-purple-800">
             <div className="flex justify-between items-center">
-              <h1 className="text-2xl font-bold text-white">
+              <h1 className="text-xl md:text-2xl font-bold text-white">
                 {isEditing ? (
                   <input
                     type="text"
                     value={editedProject.title}
                     onChange={(e) => setEditedProject({...editedProject, title: e.target.value})}
                     className="w-full px-4 py-2 rounded-lg bg-white/10 border border-white/20 
-                      text-white placeholder-white/60 focus:ring-2 focus:ring-white/50"
+                      text-white placeholder-white/60 focus:ring-2 focus:ring-white/50
+                      text-xl md:text-2xl"
                     placeholder="프로젝트 제목"
                   />
                 ) : (
@@ -414,7 +415,7 @@ export default function DetailContent({ userId, projectId }) {
                 <select
                   value={project.status}
                   onChange={(e) => handleStatusChange(e.target.value)}
-                  className={`px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer
+                  className={`font-semibold px-4 py-1.5 rounded-full text-sm font-medium cursor-pointer
                     ${project.status === '진행' 
                       ? 'bg-green-100 text-green-800 hover:bg-green-200' 
                       : project.status === '대기' 
@@ -608,15 +609,14 @@ export default function DetailContent({ userId, projectId }) {
                         ...editedProject,
                         deploymentType: e.target.value || null
                       })}
-                      className="w-full px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                        border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                      className="w-full px-3 py-1.5 text-xs rounded-lg bg-white dark:bg-gray-700    border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
                     >
                       <option value="CMS 등록">CMS 등록</option>
                       <option value="정기배포">정기배포</option>
                       <option value="">필드없음</option>
                     </select>
                   ) : (
-                    <span className="text-base text-gray-900 dark:text-white">
+                    <span className="text-sm text-gray-900 dark:text-white">
                       {project.deploymentType || '필드없음'}
                     </span>
                   )}
@@ -803,8 +803,8 @@ export default function DetailContent({ userId, projectId }) {
                   </div>
                 ) : (
                   <div className="flex flex-col space-y-1">
-                    <span className="text-blue-600 dark:text-blue-400 font-medium">
-                      {project.planning.name || '수정'}
+                    <span className="text-[14px] font-bold text-blue-600 dark:text-blue-400">
+                      {project.planning.name || '미정'}
                     </span>
                     {project.planning.effort && (
                       <span className="text-sm text-gray-500 dark:text-gray-400">
@@ -845,7 +845,7 @@ export default function DetailContent({ userId, projectId }) {
                   </div>
                 ) : (
                   <div className="flex flex-col space-y-1">
-                    <span className="text-purple-600 dark:text-purple-400 font-medium">
+                    <span className="text-[14px] font-bold text-purple-600 dark:text-purple-400">
                       {project.design.name || '미정'}
                     </span>
                     {project.design.effort && (
@@ -887,7 +887,7 @@ export default function DetailContent({ userId, projectId }) {
                   </div>
                 ) : (
                   <div className="flex flex-col space-y-1">
-                    <span className="text-green-600 dark:text-green-400 font-medium">
+                    <span className="text-[14px] font-bold text-green-600 dark:text-green-400">
                       {project.publishing.name || '미정'}
                     </span>
                     {project.publishing.effort && (
@@ -929,7 +929,7 @@ export default function DetailContent({ userId, projectId }) {
                   </div>
                 ) : (
                   <div className="flex flex-col space-y-1">
-                    <span className="text-orange-600 dark:text-orange-400 font-medium">
+                    <span className="text-[14px] font-bold text-orange-600 dark:text-orange-400">
                       {project.development.name || '미정'}
                     </span>
                     {project.development.effort && (
@@ -955,7 +955,7 @@ export default function DetailContent({ userId, projectId }) {
                   placeholder="프로젝트 설명을 입력하세요"
                 />
               ) : (
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-[14px]">
                   {project.description}
                 </p>
               )}
