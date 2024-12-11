@@ -617,6 +617,25 @@ export default function DetailContent({ userId, projectId }) {
               </div>
             </div>
 
+            {/* 프로젝트 설명 - 아래로 이동 */}
+            <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">프로젝트 설명</h3>
+              {isEditing ? (
+                <textarea
+                  value={editedProject.description}
+                  onChange={(e) => setEditedProject({...editedProject, description: e.target.value})}
+                  className="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-700 
+                    border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
+                  rows="8"
+                  placeholder="프로젝트 설명을 입력하세요"
+                />
+              ) : (
+                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-[14px]">
+                  {project.description}
+                </p>
+              )}
+            </div>
+
             {/* 프로그레스 섹션 추가 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
@@ -935,24 +954,7 @@ export default function DetailContent({ userId, projectId }) {
               </div>
             </div>
 
-            {/* 프로젝트 설명 - 아래로 이동 */}
-            <div className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">프로젝트 설명</h3>
-              {isEditing ? (
-                <textarea
-                  value={editedProject.description}
-                  onChange={(e) => setEditedProject({...editedProject, description: e.target.value})}
-                  className="w-full px-4 py-3 rounded-lg bg-white dark:bg-gray-700 
-                    border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white"
-                  rows="8"
-                  placeholder="프로젝트 설명을 입력하세요"
-                />
-              ) : (
-                <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap text-[14px]">
-                  {project.description}
-                </p>
-              )}
-            </div>
+
 
             {/* 댓글 섹션 */}
             {!isEditing && (
