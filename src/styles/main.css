@@ -18,6 +18,7 @@
   }
 
   /* custom */
+  .mt-variable-c {margin-top: 25px;}
   .mn-box {width: 20rem; text-align: center;}
   .mn-box .rounded-t-lg {height: 2.2rem;}
   .mn-box .rounded-b-lg {height: 11rem; display: flex; justify-content: space-between; align-items: center;}
@@ -46,6 +47,7 @@
   .mn-orange-sub, .mn-blue-sub {width: 49%;}
   .mn-box .rounded-b-lg {height: 11rem;}
   .text-6xl {font-size: 3rem; line-height: 3rem;}
+  .mt-variable-c {margin-top: 40px;}
 }
 
 /* Medium devices (md) */
@@ -53,6 +55,7 @@
   .mn-box.mn-orange-tit, .mn-box.mn-blue-tit {width: 49%;}
   .mn-orange-sub, .mn-blue-sub {width: 49%;}
   .text-6xl {font-size: 4rem; line-height: 3rem;}
+  .mt-variable-c {margin-top: 40px;}
 }
 
 /* Large devices (lg) */
@@ -61,6 +64,7 @@
   .mn-orange-sub, .mn-blue-sub {width: 28%;}
   .text-6xl {font-size: 4rem; line-height: 3rem;}
   .projectbtns {position: initial; padding: 0;}
+  .mt-variable-c {margin-top: 40px;}
 }
 
 /* Extra large devices (xl) */
@@ -69,6 +73,7 @@
   .mn-orange-sub, .mn-blue-sub {width: 32.3%;}
   .text-6xl {font-size: 4rem; line-height: 3rem;}
   .projectbtns {position: initial; padding: 0;}
+  .mt-variable-c {margin-top: 40px;}
 }
 
 /* 2Extra large devices (2xl) */
@@ -77,6 +82,7 @@
   .mn-orange-sub, .mn-blue-sub {width: 32.3%;}
   .text-6xl {font-size: 4rem; line-height: 3rem;}
   .projectbtns {position: initial; padding: 0;}
+  .mt-variable-c {margin-top: 40px;}
 }
 
 

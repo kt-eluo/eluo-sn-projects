@@ -496,7 +496,7 @@ export default function MainPage() {
                       </div>
                       <div className="bg-white dark:bg-gray-800 p-4 rounded-b-lg border border-blue-200 dark:border-blue-800 mn-big-tit">
                         <span className="text-6xl font-bold text-blue-500 dark:text-blue-400">{calculateTotalEffort(filteredProjects)}</span>
-                        <span className="ml-2 text-lg text-blue-500 dark:text-blue-400">m</span>
+                        <span className="ml-2 text-lg text-blue-500 dark:text-blue-400 mt-variable-c">m</span>
                       </div>
                     </div>
                     <div className="flex flex-col mn-box mn-blue-box mn-blue-sub">
