@@ -575,7 +575,7 @@ export default function Page() {
                   className={`px-4 py-2 rounded-lg text-white
                     ${isLoading 
                       ? 'bg-gray-400 cursor-not-allowed' 
-                      : 'bg-blue-500 hover:bg-blue-600 transition-colors'
+                      : 'bg-blue-500 hover:bg-blue-600 transition-colors text-[14px] font-semibold'
                     }`}
                 >
                   {isLoading ? '저장 중...' : '저장'}
@@ -583,7 +583,7 @@ export default function Page() {
                 <button
                   type="button"
                   onClick={() => router.push('/main')}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors text-[14px] font-semibold"
                 >
                   목록으로
                 </button>
