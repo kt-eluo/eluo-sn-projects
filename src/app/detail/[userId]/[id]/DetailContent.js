@@ -624,6 +624,153 @@ export default function DetailContent({ userId, projectId }) {
               </div>
             </div>
 
+            {/* 프로그레스 섹션 추가 */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+              <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">진행률</h4>
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                      {isEditing ? editedProject.progress || 0 : project.progress || 0}%
+                    </span>
+                    {isEditing && (
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={editedProject.progress || 0}
+                        onChange={(e) => {
+                          const value = Math.min(100, Math.max(0, Number(e.target.value)));
+                          setEditedProject({
+                            ...editedProject,
+                            progress: value
+                          });
+                        }}
+                        className="w-24 px-3 py-2 text-sm rounded-lg
+                          bg-gray-50 dark:bg-gray-700 
+                          border border-gray-300 dark:border-gray-600
+                          text-gray-900 dark:text-white
+                          focus:ring-2 focus:ring-blue-500"
+                      />
+                    )}
+                  </div>
+                  <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                    <div 
+                      className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                      style={{ width: `${isEditing ? editedProject.progress || 0 : project.progress || 0}%` }}
+                    ></div>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-6">작업 링크</h4>
+                <div className="space-y-5">
+                  {/* 화면설계 링크 */}
+                  <div className="flex items-center gap-4">
+                    <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
+                      화면설계 :
+                    </label>
+                    <div className="flex-1">
+                      {isEditing ? (
+                        <input
+                          type="url"
+                          value={editedProject.link?.planLink || ''}
+                          onChange={(e) => setEditedProject({
+                            ...editedProject,
+                            link: {
+                              ...editedProject.link,
+                              planLink: e.target.value
+                            }
+                          })}
+                          placeholder="화면설계 URL을 입력하세요"
+                          className="w-full px-4 py-2.5 rounded-lg text-sm
+                            bg-gray-50 dark:bg-gray-700 
+                            border border-gray-200 dark:border-gray-600
+                            text-gray-900 dark:text-white
+                            placeholder-gray-400 dark:placeholder-gray-500
+                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                            transition-colors duration-200"
+                        />
+                      ) : (
+                        project.link?.planLink ? (
+                          <a 
+                            href={project.link.planLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 
+                              dark:text-blue-400 dark:hover:text-blue-300
+                              transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            <span className="hover:underline text-[12px]">링크 바로가기</span>
+                          </a>
+                        ) : (
+                          <span className="text-[12px] text-gray-500 dark:text-gray-400">
+                            등록된 링크가 없습니다
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  {/* 디자인 링크 */}
+                  <div className="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                    <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
+                      디자인 :
+                    </label>
+                    <div className="flex-1">
+                      {isEditing ? (
+                        <input
+                          type="url"
+                          value={editedProject.link?.designLink || ''}
+                          onChange={(e) => setEditedProject({
+                            ...editedProject,
+                            link: {
+                              ...editedProject.link,
+                              designLink: e.target.value
+                            }
+                          })}
+                          placeholder="디자인 URL을 입력하세요"
+                          className="w-full px-4 py-2.5 rounded-lg text-sm
+                            bg-gray-50 dark:bg-gray-700 
+                            border border-gray-200 dark:border-gray-600
+                            text-gray-900 dark:text-white
+                            placeholder-gray-400 dark:placeholder-gray-500
+                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                            transition-colors duration-200"
+                        />
+                      ) : (
+                        project.link?.designLink ? (
+                          <a 
+                            href={project.link.designLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 
+                              dark:text-blue-400 dark:hover:text-blue-300
+                              transition-colors duration-200"
+                          >
+                            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                            <span className="hover:underline text-[12px]">링크 바로가기</span>
+                          </a>
+                        ) : (
+                          <span className="text-[12px] text-gray-500 dark:text-gray-400">
+                            등록된 링크가 없습니다
+                          </span>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* 담당자 정보 섹션 */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
               {/* 기획 */}

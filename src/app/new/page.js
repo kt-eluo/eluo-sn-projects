@@ -37,7 +37,12 @@ export default function Page() {
     design: { name: '', effort: '' },
     publishing: { name: '', effort: '' },
     development: { name: '', effort: '' },
-    totalEffort: null
+    totalEffort: null,
+    progress: 0,
+    link: {
+      planLink: '',
+      designLink: ''
+    }
   })
   const [isLoading, setIsLoading] = useState(false)
   const [isAdmin, setIsAdmin] = useState(false)
@@ -150,7 +155,12 @@ export default function Page() {
         },
         totalEffort: calculateTotalEffort(newProject),
         createAt: serverTimestamp(),
-        updateAt: serverTimestamp()
+        updateAt: serverTimestamp(),
+        progress: newProject.progress,
+        link: {
+          planLink: newProject.link.planLink,
+          designLink: newProject.link.designLink
+        }
       }
       
       await setDoc(newProjectRef, projectData)
@@ -322,7 +332,106 @@ export default function Page() {
                 </div>
               </div>
 
-              {/* 담당자 및 공수 입력 */}
+              {/* 프로그레스 섹션 */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-4">진행률</h4>
+                  <div className="space-y-4">
+                    <div className="flex justify-between items-center">
+                      <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {newProject.progress || 0}%
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        max="100"
+                        value={newProject.progress || 0}
+                        onChange={(e) => {
+                          const value = Math.min(100, Math.max(0, Number(e.target.value)));
+                          setNewProject({
+                            ...newProject,
+                            progress: value
+                          });
+                        }}
+                        className="w-24 px-3 py-2 text-sm rounded-lg
+                          bg-gray-50 dark:bg-gray-700 
+                          border border-gray-300 dark:border-gray-600
+                          text-gray-900 dark:text-white
+                          focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                    <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                      <div 
+                        className="bg-blue-500 h-3 rounded-full transition-all duration-300"
+                        style={{ width: `${newProject.progress || 0}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700">
+                  <h4 className="text-md font-semibold text-gray-900 dark:text-white mb-6">작업 링크</h4>
+                  <div className="space-y-5">
+                    {/* 화면설계 링크 */}
+                    <div className="flex items-center gap-4">
+                      <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
+                        화면설계 :
+                      </label>
+                      <div className="flex-1">
+                        <input
+                          type="url"
+                          value={newProject.link?.planLink || ''}
+                          onChange={(e) => setNewProject({
+                            ...newProject,
+                            link: {
+                              ...newProject.link,
+                              planLink: e.target.value
+                            }
+                          })}
+                          placeholder="화면설계 URL을 입력하세요"
+                          className="w-full px-4 py-2.5 rounded-lg text-sm
+                            bg-gray-50 dark:bg-gray-700 
+                            border border-gray-200 dark:border-gray-600
+                            text-gray-900 dark:text-white
+                            placeholder-gray-400 dark:placeholder-gray-500
+                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                            transition-colors duration-200"
+                        />
+                      </div>
+                    </div>
+
+                    {/* 디자인 링크 */}
+                    <div className="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-gray-700">
+                      <label className="text-[12px] font-medium text-gray-700 dark:text-gray-300 min-w-[80px]">
+                        디자인 :
+                      </label>
+                      <div className="flex-1">
+                        <input
+                          type="url"
+                          value={newProject.link?.designLink || ''}
+                          onChange={(e) => setNewProject({
+                            ...newProject,
+                            link: {
+                              ...newProject.link,
+                              designLink: e.target.value
+                            }
+                          })}
+                          placeholder="디자인 URL을 입력하세요"
+                          className="w-full px-4 py-2.5 rounded-lg text-sm
+                            bg-gray-50 dark:bg-gray-700 
+                            border border-gray-200 dark:border-gray-600
+                            text-gray-900 dark:text-white
+                            placeholder-gray-400 dark:placeholder-gray-500
+                            focus:ring-2 focus:ring-blue-500 focus:border-blue-500
+                            transition-colors duration-200"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* 담당자 정보 섹션 */}
               <div className="mb-8 grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* 기획 */}
                 <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
