@@ -24,6 +24,14 @@ import {
 const Comment = ({ comment, currentUser, onDelete, isAdmin }) => {
   const canDelete = currentUser?.email === comment.userEmail || isAdmin;
   
+  // 3일 이내 댓글인지 확인
+  const isRecentComment = () => {
+    const threeDaysAgo = new Date();
+    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+    const commentDate = comment.createdAt?.toDate();
+    return commentDate && commentDate > threeDaysAgo;
+  };
+  
   return (
     <div className="flex flex-col sm:flex-row sm:items-start justify-between p-4 bg-white 
       dark:bg-gray-800 rounded-lg border border-gray-100 dark:border-gray-700 
@@ -34,12 +42,23 @@ const Comment = ({ comment, currentUser, onDelete, isAdmin }) => {
             <span className="font-medium text-gray-900 dark:text-white text-sm">
               {comment.userEmail}
             </span>
-            {comment.userEmail === currentUser?.email && (
-              <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 
-                dark:bg-blue-900 dark:text-blue-200 rounded-full">
-                내 댓글
-              </span>
-            )}
+            <div className="flex items-center gap-1">
+              {comment.userEmail === currentUser?.email && (
+                <span className="px-2 py-0.5 text-xs bg-blue-100 text-blue-800 
+                  dark:bg-blue-900 dark:text-blue-200 rounded-full">
+                  내 댓글
+                </span>
+              )}
+              {isRecentComment() && (
+                <span className="inline-flex items-center justify-center w-5 h-5 
+                  text-[9px] font-bold bg-gradient-to-r from-red-500 to-pink-500 
+                  text-white rounded-full shadow-sm animate-pulse
+                  flex items-center justify-center leading-none"
+                  style={{ lineHeight: '0' }}>
+                  N
+                </span>
+              )}
+            </div>
           </div>
           {/* 삭제 버튼 */}
           {canDelete && (

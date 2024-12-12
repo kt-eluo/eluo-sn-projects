@@ -84,13 +84,23 @@ export default function MainPage() {
           const commentsRef = collection(db, 'projects', userDoc.id, 'userProjects', projectDoc.id, 'comments');
           const commentsSnapshot = await getDocs(commentsRef);
           
+          // 최근 3일 이내의 댓글이 있는지 확인
+          const threeDaysAgo = new Date();
+          threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
+          
+          const hasRecentComments = commentsSnapshot.docs.some(commentDoc => {
+            const commentDate = commentDoc.data().createdAt?.toDate();
+            return commentDate && commentDate > threeDaysAgo;
+          });
+          
           const projectData = projectDoc.data();
           allProjects.push({
             id: projectDoc.id,
             userId: userDoc.id,
             userEmail: userDoc.data().email,
             ...projectData,
-            commentsCount: commentsSnapshot.size // 댓글 수 저장
+            commentsCount: commentsSnapshot.size,
+            hasRecentComments // 최근 댓글 여부 추가
           });
         }
       }
@@ -846,11 +856,12 @@ export default function MainPage() {
                       >
                         {project.title}
                       </h3>
-                      <div className="flex items-center gap-1.5">
+                      <div className="flex items-center gap-1">
                         {/* 댓글 뱃지 - commentsCount가 0보다 큰 경우에만 표시 */}
                         {project.commentsCount > 0 && (
                           <div className="flex items-center gap-0.5 px-2 py-1 text-[11px] rounded-full 
-                            bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200">
+                            bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200
+                            relative">
                             <svg 
                               xmlns="http://www.w3.org/2000/svg" 
                               className="h-3 w-3" 
@@ -864,6 +875,13 @@ export default function MainPage() {
                               />
                             </svg>
                             {project.commentsCount}
+                            {project.hasRecentComments && (
+                              <span className="absolute -top-2 -right-2 px-1 py-0.5 text-[7px] font-bold rounded-full 
+                                bg-red-500 text-white 
+                                animate-pulse">
+                                N
+                              </span>
+                            )}
                           </div>
                         )}
                         {/* 기존 상태 뱃지 */}
