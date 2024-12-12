@@ -88,12 +88,12 @@ export function Header() {
               {darkMode ? (
                 <>
                   <span className="mr-1 sm:mr-2">☀️</span>
-                  <span className="hidden md:inline">라이트 모드</span>
+                  <span className="hidden md:inline text-[14px]">라이트 모드</span>
                 </>
               ) : (
                 <>
                   <span className="mr-1 sm:mr-2">🌑</span>
-                  <span className="hidden md:inline">다크 모드</span>
+                  <span className="hidden md:inline text-[14px]">다크 모드</span>
                 </>
               )}
             </button>
