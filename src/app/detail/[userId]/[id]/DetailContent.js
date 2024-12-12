@@ -21,12 +21,31 @@ import {
 } from 'firebase/firestore'
 
 // 댓글 컴포넌트
-const Comment = ({ comment, currentUser, onDelete, isAdmin }) => {
+const Comment = ({ comment, currentUser, onDelete, isAdmin, userId, projectId, setComments }) => {
   const canDelete = currentUser?.email === comment.userEmail || isAdmin;
   
-  // 새로운 댓글인지 확인
+  // adminCheck 필드로 새로운 댓글 여부 확인
   const isNewComment = () => {
-    return comment.isNew; // 새로운 댓글 여부만 확인
+    return comment.adminCheck === false;
+  };
+
+  // 확인 버튼 핸들러 추가
+  const handleConfirm = async () => {
+    try {
+      const db = getFirestore();
+      const commentRef = doc(db, 'projects', userId, 'userProjects', projectId, 'comments', comment.id);
+      await updateDoc(commentRef, {
+        adminCheck: true
+      });
+      // N 뱃지 제거를 위해 상태 업데이트
+      setComments(prevComments => 
+        prevComments.map(c => 
+          c.id === comment.id ? { ...c, adminCheck: true } : c
+        )
+      );
+    } catch (error) {
+      console.error('댓글 확인 처리 중 오류:', error);
+    }
   };
   
   return (
@@ -57,23 +76,43 @@ const Comment = ({ comment, currentUser, onDelete, isAdmin }) => {
               )}
             </div>
           </div>
-          {/* 삭제 버튼 */}
-          {canDelete && (
-            <button
-              onClick={() => onDelete(comment.id)}
-              className="p-1.5 text-gray-500 hover:text-red-500 dark:text-gray-400 
-                dark:hover:text-red-400 rounded-full hover:bg-red-50 
-                dark:hover:bg-red-900/20 transition-all duration-200 
-                flex items-center gap-1 self-start sm:self-center"
-              title={isAdmin ? "관리자 권한으로 삭제" : "삭제"}
-            >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-              </svg>
-              <span className="text-xs">삭제</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2 self-end sm:self-center">
+            {/* 삭제 버튼 */}
+            {canDelete && (
+              <button
+                onClick={() => onDelete(comment.id)}
+                className="p-1.5 text-gray-500 hover:text-red-500 dark:text-gray-400 
+                  dark:hover:text-red-400 rounded-full hover:bg-red-50 
+                  dark:hover:bg-red-900/20 transition-all duration-200 
+                  flex items-center gap-1"
+                title={isAdmin ? "관리자 권한으로 삭제" : "삭제"}
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                </svg>
+                <span className="text-xs">삭제</span>
+              </button>
+            )}
+            
+            {/* 확인 버튼 추가 */}
+            {isAdmin && isNewComment() && (
+              <button
+                onClick={handleConfirm}
+                className="p-1.5 text-gray-500 hover:text-green-500 dark:text-gray-400 
+                  dark:hover:text-green-400 rounded-full hover:bg-green-50 
+                  dark:hover:bg-green-900/20 transition-all duration-200 
+                  flex items-center gap-1"
+                title="관리자 확인"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" 
+                    d="M5 13l4 4L19 7" />
+                </svg>
+                <span className="text-xs">확인</span>
+              </button>
+            )}
+          </div>
         </div>
         <p className="text-gray-700 dark:text-gray-300 text-sm break-words">
           {comment.content}
@@ -262,33 +301,29 @@ export default function DetailContent({ userId, projectId }) {
   // 댓글 추가
   const handleAddComment = async (e) => {
     e.preventDefault();
-    if (!user || !newComment.trim() || isSubmitting) return;
+    if (!newComment.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
+    
     try {
-      // 댓글 추가
-      const commentData = {
-        content: newComment.trim(),
-        userEmail: user.email,
-        createdAt: serverTimestamp(),
-      };
-
+      const db = getFirestore();
       const commentsRef = collection(db, 'projects', userId, 'userProjects', projectId, 'comments');
+      
+      // 새 댓글 데이터에 projectUserId와 projectId 추가
+      const commentData = {
+        content: newComment,
+        createdAt: serverTimestamp(),
+        userId: user.uid,
+        userEmail: user.email,
+        adminCheck: false,
+        projectUserId: userId,    // 추가
+        projectId: projectId      // 추가
+      };
+      
       await addDoc(commentsRef, commentData);
-
-      // 댓글 목록 업데이트
-      const q = query(commentsRef, orderBy('createdAt', 'desc'));
-      const querySnapshot = await getDocs(q);
-      
-      const updatedComments = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      setComments(updatedComments);
       setNewComment('');
     } catch (error) {
-      console.error('댓글 작성 중 오류 발생:', error);
+      console.error('댓글 작성 중 오류:', error);
       alert('댓글 작성 중 오류가 발생했습니다.');
     } finally {
       setIsSubmitting(false);
@@ -1035,6 +1070,9 @@ export default function DetailContent({ userId, projectId }) {
                     currentUser={user}
                     onDelete={handleDeleteComment}
                     isAdmin={isAdmin}
+                    userId={userId}
+                    projectId={projectId}
+                    setComments={setComments}
                   />
                 ))}
                 
