@@ -38,6 +38,23 @@ export default function MainPage() {
   const [displayYear, setDisplayYear] = useState(Number(currentYear))
   const [displayMonth, setDisplayMonth] = useState(currentMonth)
 
+  // 상태 추기화 수정
+  const [hiddenCommentBadges, setHiddenCommentBadges] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`hiddenCommentBadges_${user?.uid}`);
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    }
+    return new Set();
+  });
+
+  // useEffect 추가 - 사용자 변경시 숨김 상태 초기화
+  useEffect(() => {
+    if (user?.uid && typeof window !== 'undefined') {
+      const saved = localStorage.getItem(`hiddenCommentBadges_${user.uid}`);
+      setHiddenCommentBadges(saved ? new Set(JSON.parse(saved)) : new Set());
+    }
+  }, [user?.uid]);
+
   useEffect(() => {
     const checkAdminStatus = async () => {
       if (!user) return
@@ -84,14 +101,8 @@ export default function MainPage() {
           const commentsRef = collection(db, 'projects', userDoc.id, 'userProjects', projectDoc.id, 'comments');
           const commentsSnapshot = await getDocs(commentsRef);
           
-          // 최근 3일 이내의 댓글이 있는지 확인
-          const threeDaysAgo = new Date();
-          threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-          
-          const hasRecentComments = commentsSnapshot.docs.some(commentDoc => {
-            const commentDate = commentDoc.data().createdAt?.toDate();
-            return commentDate && commentDate > threeDaysAgo;
-          });
+          // 댓글이 있는지만 확인
+          const hasRecentComments = commentsSnapshot.size > 0;
           
           const projectData = projectDoc.data();
           allProjects.push({
@@ -100,7 +111,7 @@ export default function MainPage() {
             userEmail: userDoc.data().email,
             ...projectData,
             commentsCount: commentsSnapshot.size,
-            hasRecentComments // 최근 댓글 여부 추가
+            hasRecentComments // 댓글 존재 여부만 체크
           });
         }
       }
@@ -330,7 +341,7 @@ export default function MainPage() {
 
       delete newProjectData.id; // id 제거
 
-      // 3. 새 프로젝트 추가 (현재 사용자의 로에)
+      // 3. 새 프로젝트 추가 (현재 사용자의 경로에)
       const userProjectsRef = collection(db, 'projects', user.uid, 'userProjects');
       const docRef = await addDoc(userProjectsRef, newProjectData);
 
@@ -409,6 +420,31 @@ export default function MainPage() {
     return Number(total.toFixed(2));
   };
 
+  // 뱃지 숨기기 핸들러 수정
+  const handleHideCommentBadge = (e, projectId) => {
+    e.stopPropagation();
+    setHiddenCommentBadges(prev => {
+      const newSet = new Set(prev);
+      newSet.add(projectId);
+      
+      // 로컬 스토리지에 저장
+      if (user?.uid && typeof window !== 'undefined') {
+        localStorage.setItem(
+          `hiddenCommentBadges_${user.uid}`, 
+          JSON.stringify([...newSet])
+        );
+      }
+      
+      return newSet;
+    });
+  };
+
+  // 댓글 뱃지 클릭 핸들러 추가
+  const handleCommentBadgeClick = (e, projectId, userId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    router.push(`/detail/${userId}/${projectId}?scrollTo=comments`);
+  };
 
   if (loading || isLoading) {
     return (
@@ -858,30 +894,33 @@ export default function MainPage() {
                       </h3>
                       <div className="flex items-center gap-1">
                         {/* 댓글 뱃지 - commentsCount가 0보다 큰 경우에만 표시 */}
-                        {project.commentsCount > 0 && (
-                          <div className="flex items-center gap-0.5 px-2 py-1 text-[11px] rounded-full 
-                            bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200
-                            relative">
-                            <svg 
-                              xmlns="http://www.w3.org/2000/svg" 
-                              className="h-3 w-3" 
-                              viewBox="0 0 20 20" 
-                              fill="currentColor"
-                            >
-                              <path 
-                                fillRule="evenodd" 
-                                d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z"
-                                clipRule="evenodd"
-                              />
+                        {project.commentsCount > 0 && !hiddenCommentBadges.has(project.id) && (
+                          <div 
+                            className="flex items-center gap-0.5 px-2 py-1 text-[11px] rounded-full 
+                              relative group cursor-pointer hover:bg-blue-200 dark:hover:bg-blue-800/50
+                              bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-200 animate-pulse"
+                            onClick={(e) => handleCommentBadgeClick(e, project.id, project.userId)}
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.338-3.123C2.493 12.767 2 11.434 2 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM7 9H5v2h2V9zm8 0h-2v2h2V9zM9 9h2v2H9V9z" clipRule="evenodd" />
                             </svg>
                             {project.commentsCount}
                             {project.hasRecentComments && (
                               <span className="absolute -top-2 -right-2 px-1 py-0.5 text-[7px] font-bold rounded-full 
-                                bg-red-500 text-white 
-                                animate-pulse">
+                                bg-red-500 text-white">
                                 N
                               </span>
                             )}
+                            <button
+                              onClick={(e) => handleHideCommentBadge(e, project.id)}
+                              className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full
+                                bg-gray-400 text-white hover:bg-gray-600
+                                flex items-center justify-center
+                                opacity-0 group-hover:opacity-100 transition-opacity
+                                text-[8px] leading-none"
+                            >
+                              ×
+                            </button>
                           </div>
                         )}
                         {/* 기존 상태 뱃지 */}

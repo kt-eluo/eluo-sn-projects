@@ -24,12 +24,9 @@ import {
 const Comment = ({ comment, currentUser, onDelete, isAdmin }) => {
   const canDelete = currentUser?.email === comment.userEmail || isAdmin;
   
-  // 3일 이내 댓글인지 확인
-  const isRecentComment = () => {
-    const threeDaysAgo = new Date();
-    threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
-    const commentDate = comment.createdAt?.toDate();
-    return commentDate && commentDate > threeDaysAgo;
+  // 새로운 댓글인지 확인
+  const isNewComment = () => {
+    return comment.isNew; // 새로운 댓글 여부만 확인
   };
   
   return (
@@ -49,9 +46,9 @@ const Comment = ({ comment, currentUser, onDelete, isAdmin }) => {
                   내 댓글
                 </span>
               )}
-              {isRecentComment() && (
-                <span className="inline-flex items-center justify-center w-5 h-5 
-                  text-[9px] font-bold bg-gradient-to-r from-red-500 to-pink-500 
+              {isNewComment() && (
+                <span className="inline-flex items-center justify-center w-4 h-4 
+                  text-[8px] font-bold bg-gradient-to-r from-red-500 to-pink-500 
                   text-white rounded-full shadow-sm animate-pulse
                   flex items-center justify-center leading-none"
                   style={{ lineHeight: '0' }}>
@@ -253,7 +250,8 @@ export default function DetailContent({ userId, projectId }) {
     const unsubscribe = onSnapshot(q, (snapshot) => {
       const commentsData = snapshot.docs.map(doc => ({
         id: doc.id,
-        ...doc.data()
+        ...doc.data(),
+        isNew: true // 모든 새로운 댓글에 isNew 속성 추가
       }));
       setComments(commentsData);
     });
@@ -386,6 +384,24 @@ export default function DetailContent({ userId, projectId }) {
       console.error('상태 변경 중 오류:', error);
     }
   };
+
+  // URL에서 scrollTo 파라미터 확인
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const searchParams = new URLSearchParams(window.location.search);
+      const scrollTo = searchParams.get('scrollTo');
+      
+      if (scrollTo === 'comments') {
+        // 약간의 지연을 주어 컴포넌트가 완전히 렌더링된 후 스크롤
+        setTimeout(() => {
+          const commentsSection = document.getElementById('comments-section');
+          if (commentsSection) {
+            commentsSection.scrollIntoView({ behavior: 'smooth' });
+          }
+        }, 100);
+      }
+    }
+  }, []);
 
   if (isLoading) {
     return <div>로딩 중...</div>;
@@ -973,66 +989,62 @@ export default function DetailContent({ userId, projectId }) {
               </div>
             </div>
 
-
-
             {/* 댓글 섹션 */}
-            {!isEditing && (
-              <div className="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
-                  댓글 
-                  <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
-                    ({comments.length}개)
-                  </span>
-                </h3>
-                
-                {/* 댓글 작성 폼 */}
-                <form onSubmit={handleAddComment} className="mb-6">
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <input
-                      type="text"
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="댓글을 입력하세요"
-                      className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
-                        border border-gray-300 dark:border-gray-600 text-gray-900 
-                        dark:text-white focus:ring-2 focus:ring-blue-500 
-                        focus:border-blue-500 dark:focus:ring-blue-500 
-                        dark:focus:border-blue-500 text-[14px] mb-2 sm:mb-0"
-                    />
-                    <button
-                      type="submit"
-                      disabled={isSubmitting || !newComment.trim()}
-                      className="px-6 py-2 bg-blue-500 text-white rounded-lg 
-                        hover:bg-blue-600 transition-colors focus:ring-2 
-                        focus:ring-blue-500 focus:ring-offset-2
-                        disabled:bg-blue-300 disabled:cursor-not-allowed 
-                        text-[14px] w-full sm:w-auto"
-                    >
-                      {isSubmitting ? '작성 중...' : '작성'}
-                    </button>
-                  </div>
-                </form>
-
-                {/* 댓글 목록 */}
-                <div className="space-y-3">
-                  {comments.map(comment => (
-                    <Comment
-                      key={comment.id}
-                      comment={comment}
-                      currentUser={user}
-                      onDelete={handleDeleteComment}
-                      isAdmin={isAdmin}
-                    />
-                  ))}
-                  
-                  {comments.length === 0 && (
-                    <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-[14px]">
-                      아직 작성된 댓글이 없습니다.
-                    </div>
-                  )}
+            <div id="comments-section" className="w-full bg-gray-50 dark:bg-gray-700/50 rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+                댓글 
+                <span className="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                  ({comments.length}개)
+                </span>
+              </h3>
+              
+              {/* 댓글 작성 폼 */}
+              <form onSubmit={handleAddComment} className="mb-6">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <input
+                    type="text"
+                    value={newComment}
+                    onChange={(e) => setNewComment(e.target.value)}
+                    placeholder="댓글을 입력하세요"
+                    className="flex-1 px-4 py-2 rounded-lg bg-white dark:bg-gray-700 
+                      border border-gray-300 dark:border-gray-600 text-gray-900 
+                      dark:text-white focus:ring-2 focus:ring-blue-500 
+                      focus:border-blue-500 dark:focus:ring-blue-500 
+                      dark:focus:border-blue-500 text-[14px] mb-2 sm:mb-0"
+                  />
+                  <button
+                    type="submit"
+                    disabled={isSubmitting || !newComment.trim()}
+                    className="px-6 py-2 bg-blue-500 text-white rounded-lg 
+                      hover:bg-blue-600 transition-colors focus:ring-2 
+                      focus:ring-blue-500 focus:ring-offset-2
+                      disabled:bg-blue-300 disabled:cursor-not-allowed 
+                      text-[14px] w-full sm:w-auto"
+                  >
+                    {isSubmitting ? '작성 중...' : '작성'}
+                  </button>
                 </div>
+              </form>
+
+              {/* 댓글 목록 */}
+              <div className="space-y-3">
+                {comments.map(comment => (
+                  <Comment
+                    key={comment.id}
+                    comment={comment}
+                    currentUser={user}
+                    onDelete={handleDeleteComment}
+                    isAdmin={isAdmin}
+                  />
+                ))}
+                
+                {comments.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 dark:text-gray-400 text-[14px]">
+                    아직 작성된 댓글이 없습니다.
+                  </div>
+                )}
               </div>
-            )}
+            </div>
 
             {/* 버튼 영역 */}
             <div className="flex justify-end gap-3">
