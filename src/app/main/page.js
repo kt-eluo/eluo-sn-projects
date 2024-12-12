@@ -911,7 +911,7 @@ export default function MainPage() {
                                 N
                               </span>
                             )}
-                            <button
+                            {/* <button
                               onClick={(e) => handleHideCommentBadge(e, project.id)}
                               className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full
                                 bg-gray-400 text-white hover:bg-gray-600
@@ -920,7 +920,7 @@ export default function MainPage() {
                                 text-[8px] leading-none"
                             >
                               ×
-                            </button>
+                            </button> */}
                           </div>
                         )}
                         {/* 기존 상태 뱃지 */}
