@@ -307,7 +307,7 @@ export default function MainPage() {
 
   // 복사 함수 수
   const handleCopy = async (projectId, originalUserId) => {
-    console.log("복사 시작:", projectId, originalUserId, user.uid); // 디버깅용
+    console.log("복사 시작:", projectId, originalUserId, user.uid);
 
     if (!user?.uid) {
       alert('로그인이 필요합니다.');
@@ -317,11 +317,11 @@ export default function MainPage() {
     try {
       const db = getFirestore();
       
-      // 1. 원본 프로젝트 데이터 가져오기 (원래 소유자의 경로에서)
+      // 1. 원본 프로젝트 데이터 가져오기
       const originalProjectRef = doc(db, 'projects', originalUserId, 'userProjects', projectId);
       const originalProjectSnap = await getDoc(originalProjectRef);
 
-      console.log("프로젝트 스냅샷:", originalProjectSna.exists(), originalProjectSnap.data()); // 디버깅용
+      console.log("프로젝트 스냅샷:", originalProjectSnap.exists(), originalProjectSnap.data());
 
       if (!originalProjectSnap.exists()) {
         console.error('프로젝트를 찾을 수 없음:', projectId);
@@ -334,24 +334,23 @@ export default function MainPage() {
       const newProjectData = {
         ...originalData,
         title: `${originalData.title} (복사본)`,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp(),
-        userId: user.uid,  // 현재 사용자의 uid로 설정
+        createAt: serverTimestamp(),
+        updateAt: serverTimestamp(),
+        userId: user.uid,
       };
 
-      delete newProjectData.id; // id 제거
+      delete newProjectData.id;
 
-      // 3. 새 프로젝트 추가 (현재 사용자의 경로에)
+      // 3. 새 프로젝트 추가
       const userProjectsRef = collection(db, 'projects', user.uid, 'userProjects');
       const docRef = await addDoc(userProjectsRef, newProjectData);
 
-      console.log("프로젝트 복사 료:", docRef.id); // 디버깅용
+      console.log("프로젝트 복사 완료:", docRef.id);
       
-      // 4. 성공 메시지 표시 및 복사 모드 종료
       alert('프로젝트가 성공적으로 복사되었습니다.');
       setIsCopyMode(false);
       
-      // 5. 프로젝트 목록 새로고침
+      // 프로젝트 목록 새로고침
       fetchUserProjects(user.uid);
 
     } catch (error) {
