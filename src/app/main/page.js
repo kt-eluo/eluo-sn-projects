@@ -911,16 +911,16 @@ export default function MainPage() {
                                 N
                               </span>
                             )}
-                            {/* <button
+                            <button
                               onClick={(e) => handleHideCommentBadge(e, project.id)}
                               className="absolute -bottom-1 -right-1 w-3 h-3 rounded-full
                                 bg-gray-400 text-white hover:bg-gray-600
-                                flex items-center justify-center
+                                hidden md:flex items-center justify-center
                                 opacity-0 group-hover:opacity-100 transition-opacity
                                 text-[8px] leading-none"
                             >
                               ×
-                            </button> */}
+                            </button>
                           </div>
                         )}
                         {/* 기존 상태 뱃지 */}
