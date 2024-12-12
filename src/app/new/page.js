@@ -38,7 +38,7 @@ export default function Page() {
     publishing: { name: '', effort: '' },
     development: { name: '', effort: '' },
     totalEffort: null,
-    progress: 0,
+    progress: null,
     link: {
       planLink: '',
       designLink: ''
@@ -345,15 +345,15 @@ export default function Page() {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-2xl font-bold text-blue-600 dark:text-blue-400">
-                        {newProject.progress || 0}%
+                        {newProject.progress ?? 0}%
                       </span>
                       <input
                         type="number"
                         min="0"
                         max="100"
-                        value={newProject.progress || 0}
+                        value={newProject.progress ?? ''}
                         onChange={(e) => {
-                          const value = Math.min(100, Math.max(0, Number(e.target.value)));
+                          const value = e.target.value === '' ? null : Math.min(100, Math.max(0, Number(e.target.value)));
                           setNewProject({
                             ...newProject,
                             progress: value
@@ -369,7 +369,7 @@ export default function Page() {
                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                       <div 
                         className="bg-blue-500 h-3 rounded-full transition-all duration-300"
-                        style={{ width: `${newProject.progress || 0}%` }}
+                        style={{ width: `${newProject.progress ?? 0}%` }}
                       ></div>
                     </div>
                   </div>
