@@ -247,8 +247,8 @@ export default function MainPage() {
   const handleMonthFilterChange = (month) => {
     if (month === '전체') {
       if (isAllMonthsSelected) {
-        // 전체가 선택된 상태에서 클릭하면 12월만 선택
-        setSelectedMonths([12]);
+        // 전체가 선택된 상태에서 클릭하면 현재 월만 선택
+        setSelectedMonths([currentMonth]);
         setIsAllMonthsSelected(false);
       } else {
         // 전체가 선택되지 않은 상태에서 클릭하면 모두 선택
@@ -260,10 +260,10 @@ export default function MainPage() {
       setSelectedMonths(prev => {
         let newSelection;
         if (prev.includes(month)) {
-          // 이미 선택된 월 클릭 시 해제하되, 모든 월이 해제되면 12월 선택
+          // 이미 선택된 월 클릭 시 해제하되, 모든 월이 해제되면 현재 월 선택
           newSelection = prev.filter(m => m !== month);
           if (newSelection.length === 0) {
-            newSelection = [12];
+            newSelection = [currentMonth];
           }
         } else {
           // 새로운 월 선택 시 추가
@@ -371,10 +371,22 @@ export default function MainPage() {
 
   // 년도 필터 변경 핸들러 수정
   const handleYearFilterChange = (year) => {
-    setYearFilter(year);
-    setDisplayYear(Number(year)); // 년 표시 업데이트
-    setCurrentPage(1);
-  };
+    setYearFilter(year)
+    setDisplayYear(Number(year))
+    
+    // 현재 년도와 비교하여 월 필터 설정
+    if (Number(year) === Number(currentYear)) {
+      // 현재 년도인 경우 현재 월로 설정
+      setSelectedMonths([currentMonth])
+      setIsAllMonthsSelected(false)
+    } else if (Number(year) < Number(currentYear)) {
+      // 이전 년도인 경우 전체 월 선택
+      setSelectedMonths([1,2,3,4,5,6,7,8,9,10,11,12])
+      setIsAllMonthsSelected(true)
+    }
+    
+    setCurrentPage(1)
+  }
 
   // 초기 상태 설정
   useEffect(() => {
