@@ -2,7 +2,7 @@
 
 import { useFirebase } from '@/context/FirebaseContext'
 import { signInWithEmailAndPassword, createUserWithEmailAndPassword, signOut, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
-import { getFirestore, doc, getDoc } from 'firebase/firestore'
+import { getFirestore, doc, getDoc, setDoc } from 'firebase/firestore'
 import { useState, useEffect } from 'react'
 import { useAuth } from '@/app/hooks/useAuth'
 import { useRouter } from 'next/navigation'
@@ -46,7 +46,15 @@ export function Auth() {
 
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, email, password)
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password)
+        
+        const db = getFirestore()
+        await setDoc(doc(db, 'users', userCredential.user.uid), {
+          email: userCredential.user.email,
+          role: 'visitor',
+          createdAt: new Date()
+        })
+
         alert('회원가입이 성공적으로 완료되었습니다!')
         console.log('회원가입 성공')
       } else {
@@ -56,14 +64,16 @@ export function Auth() {
           const db = getFirestore()
           const userDoc = await getDoc(doc(db, 'users', userCredential.user.uid))
           
-          if (userDoc.exists() && userDoc.data().role === 'admin') {
-            alert('관리자로 로그인되었습니다')
-          } else {
-            alert('로그인 성공!')
+          if (userDoc.exists()) {
+            const userData = userDoc.data()
+            if (userData.role === 'admin') {
+              alert('관리자로 로그인되었습니다')
+            } else if (userData.role !== 'visitor') {
+              alert('로그인 성공!')
+            }
           }
         } catch (firestoreError) {
           console.error('Firestore 조회 실패:', firestoreError)
-          alert('로그인 성공!')
         }
         
         console.log('로그인 성공')

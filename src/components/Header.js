@@ -101,7 +101,10 @@ export function Header() {
             {/* 로그인/로그아웃 영역 */}
             {user ? (
               <div className="flex items-center gap-1 sm:gap-2 md:gap-4 flex-shrink-0">
-                <span className="text-gray-900 dark:text-white text-xs sm:text-sm md:text-base">
+                <span 
+                  onClick={() => router.push('/mypage')}
+                  className="text-gray-900 dark:text-white text-xs sm:text-sm md:text-base cursor-pointer hover:underline"
+                >
                   {user.email}
                   {isAdmin && (
                     <span className="ml-1 sm:ml-2 px-1.5 sm:px-2 py-0.5 sm:py-1 text-xs bg-gray-700 text-white rounded-full">
