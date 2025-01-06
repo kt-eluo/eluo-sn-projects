@@ -263,7 +263,7 @@ export default function MainPage() {
           // 이미 선택된 월 클릭 시 해제하되, 모든 월이 해제되면 현재 월 선택
           newSelection = prev.filter(m => m !== month);
           if (newSelection.length === 0) {
-            newSelection = [currentMonth];
+            newSelection = [currentMonth];7
           }
         } else {
           // 새로운 월 선택 시 추가
