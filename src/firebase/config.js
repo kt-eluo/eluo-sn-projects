@@ -4,13 +4,13 @@ import { getFirestore } from 'firebase/firestore'
 import { getStorage } from 'firebase/storage'
 
 const firebaseConfig = {
-    apiKey: "AIzaSyDNVAbkDLcnQ59QcocuMBX0-bSPDZTx5l8",
-    authDomain: "eluo-sn-project.firebaseapp.com",
-    projectId: "eluo-sn-project",
-    storageBucket: "eluo-sn-project.firebasestorage.app",
-    messagingSenderId: "859923593463",
-    appId: "1:859923593463:web:0983eeb7b0826ff0f3fbf2",
-    measurementId: "G-DCFFF91S5M"
+    apiKey: "AIzaSyDjO2H3_eD9dZsRPsKhnEtJlfjwAi1UjVU",
+    authDomain: "eluo-sn-project-dd82e.firebaseapp.com",
+    projectId: "eluo-sn-project-dd82e",
+    storageBucket: "eluo-sn-project-dd82e.firebasestorage.app",
+    messagingSenderId: "182525558463",
+    appId: "1:182525558463:web:b32a3a782cee89ec7ad00a",
+    measurementId: "G-VPRB1NHJPB"
 }
 
 // Firebase 초기화
